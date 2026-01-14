@@ -21,6 +21,9 @@ export enum ExpenseCategory {
   HOTEL = 'HOTEL',
   TRANSPORT = 'TRANSPORT',
   OTHER = 'OTHER',
+  TRAVEL = 'TRAVEL',
+  MEAL = 'MEAL',
+  OFFICE_SUPPLIES = 'OFFICE_SUPPLIES',
 }
 
 export enum SortBy {
@@ -34,11 +37,27 @@ export enum SortOrder {
   DESC = 'desc',
 }
 
+/**
+ * Expense status for individual expenses
+ */
+export enum ExpenseStatus {
+  SUBMITTED = 'Submitted',
+  ACCEPTED = 'Accepted',
+  DENIED = 'Denied',
+}
+
 export interface Expense {
   id: string;
-  category: ExpenseCategory;
-  amount: number;
+  reportId: string;
+  name: string;
   description?: string;
+  amount: number;
+  expenseDate: string;
+  category: ExpenseCategory;
+  receiptRequired: boolean;
+  createdAt: string;
+  updatedAt: string;
+  status?: ExpenseStatus;
 }
 
 /**
@@ -103,6 +122,13 @@ export interface ExpenseReport {
   expenses: Expense[];
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * Expense report details with expenses
+ */
+export interface ExpenseReportDetails extends ExpenseReportResponse {
+  expenses?: Expense[];
 }
 
 /**

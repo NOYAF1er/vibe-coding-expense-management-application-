@@ -2,7 +2,7 @@
  * Expense Report API Service
  */
 
-import { ExpenseReport, ExpenseReportListItem } from '../types/expense-report.types';
+import { ExpenseReport, ExpenseReportListItem, ExpenseReportDetails } from '../types/expense-report.types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -24,7 +24,7 @@ class ExpenseReportService {
   /**
    * Get a single expense report by ID
    */
-  async getById(id: string): Promise<ExpenseReport> {
+  async getById(id: string): Promise<ExpenseReportDetails> {
     const response = await fetch(`${this.baseUrl}/${id}`);
     if (!response.ok) {
       throw new Error('Failed to fetch expense report');
@@ -35,7 +35,7 @@ class ExpenseReportService {
   /**
    * Create a new expense report
    */
-  async create(data: Partial<ExpenseReport>): Promise<ExpenseReport> {
+  async create(data: Partial<ExpenseReport>): Promise<ExpenseReportDetails> {
     const response = await fetch(this.baseUrl, {
       method: 'POST',
       headers: {
@@ -52,7 +52,7 @@ class ExpenseReportService {
   /**
    * Update an expense report
    */
-  async update(id: string, data: Partial<ExpenseReport>): Promise<ExpenseReport> {
+  async update(id: string, data: Partial<ExpenseReport>): Promise<ExpenseReportDetails> {
     const response = await fetch(`${this.baseUrl}/${id}`, {
       method: 'PATCH',
       headers: {

@@ -207,8 +207,7 @@ export const ExpenseReportsPage: React.FC = () => {
   };
 
   const handleReportClick = (reportId: string) => {
-    console.log('View report:', reportId);
-    // TODO: Navigate to report detail page
+    navigate(`/reports/${reportId}`);
   };
 
   return (
