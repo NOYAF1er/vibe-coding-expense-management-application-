@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ExpenseReportStatus } from '../../../common/enums/expense-report-status.enum';
+import { ExpenseCategory } from '../../../common/enums/expense-category.enum';
 
 /**
  * DTO for expense report response
@@ -40,4 +41,12 @@ export class ExpenseReportResponseDto {
 
   @ApiProperty()
   updatedAt!: Date;
+
+  @ApiProperty({
+    type: [String],
+    enum: ExpenseCategory,
+    description: 'Unique categories from all expenses in this report',
+    required: false
+  })
+  categories?: ExpenseCategory[];
 }

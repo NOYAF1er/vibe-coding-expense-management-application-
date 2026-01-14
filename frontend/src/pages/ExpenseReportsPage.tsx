@@ -33,8 +33,6 @@ interface FilterChip {
 
 /**
  * Transform backend response to list item format
- * Note: Backend doesn't return categories, so we use empty array for now
- * TODO: Fetch expenses for each report to get actual categories
  */
 function transformToListItem(report: ExpenseReportResponse): ExpenseReportListItem {
   return {
@@ -43,7 +41,7 @@ function transformToListItem(report: ExpenseReportResponse): ExpenseReportListIt
     date: report.reportDate,
     totalAmount: report.totalAmount,
     status: report.status,
-    categories: [], // TODO: Fetch from expenses
+    categories: report.categories || [],
   };
 }
 

@@ -4,6 +4,8 @@ import { ExpenseReportsService } from './expense-reports.service';
 import { ExpenseReportStatus } from '../../common/enums/expense-report-status.enum';
 import { QueryExpenseReportsDto, SortBy, SortOrder } from './dto/query-expense-reports.dto';
 import { PaginatedExpenseReportsDto } from './dto/paginated-expense-reports.dto';
+import { CreateExpenseReportDto } from './dto/create-expense-report.dto';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('ExpenseReportsController', () => {
   let controller: ExpenseReportsController;
@@ -29,6 +31,7 @@ describe('ExpenseReportsController', () => {
     update: jest.fn(),
     remove: jest.fn(),
     calculateTotal: jest.fn(),
+    submit: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -254,6 +257,96 @@ describe('ExpenseReportsController', () => {
 
       expect(result.meta.page).toBe(3);
       expect(result.meta.totalPages).toBe(3);
+    });
+  });
+
+  describe('create', () => {
+    it('should create a new expense report', async () => {
+      const createDto: CreateExpenseReportDto = {
+        userId: '123e4567-e89b-12d3-a456-426614174001',
+        title: 'Business Trip to Paris',
+        reportDate: '2024-01-15',
+      };
+
+      mockService.create.mockResolvedValue(mockExpenseReport);
+
+      const result = await controller.create(createDto);
+
+      expect(result).toEqual(mockExpenseReport);
+      expect(service.create).toHaveBeenCalledWith(createDto);
+    });
+
+    it('should handle validation errors', async () => {
+      const invalidDto = {
+        userId: 'invalid-uuid',
+        title: '',
+        reportDate: 'invalid-date',
+      } as any;
+
+      // This would be caught by class-validator before reaching the controller
+      // but we test the service call behavior
+      mockService.create.mockRejectedValue(new Error('Validation failed'));
+
+      await expect(controller.create(invalidDto)).rejects.toThrow(
+        'Validation failed',
+      );
+    });
+
+    it('should handle foreign key constraint errors', async () => {
+      const createDto: CreateExpenseReportDto = {
+        userId: 'non-existent-user-id',
+        title: 'Test Report',
+        reportDate: '2024-01-15',
+      };
+
+      mockService.create.mockRejectedValue({
+        code: 'SQLITE_CONSTRAINT',
+        message: 'FOREIGN KEY constraint failed',
+      });
+
+      await expect(controller.create(createDto)).rejects.toMatchObject({
+        code: 'SQLITE_CONSTRAINT',
+      });
+    });
+  });
+
+  describe('submit', () => {
+    it('should submit an expense report', async () => {
+      const submittedReport = {
+        ...mockExpenseReport,
+        status: ExpenseReportStatus.SUBMITTED,
+      };
+
+      mockService.submit.mockResolvedValue(submittedReport);
+
+      const result = await controller.submit(mockExpenseReport.id);
+
+      expect(result).toEqual(submittedReport);
+      expect(result.status).toBe(ExpenseReportStatus.SUBMITTED);
+      expect(service.submit).toHaveBeenCalledWith(mockExpenseReport.id);
+    });
+
+    it('should handle errors when submitting non-draft report', async () => {
+      mockService.submit.mockRejectedValue(
+        new BadRequestException(
+          `Report cannot be submitted. Current status is ${ExpenseReportStatus.SUBMITTED}, but must be ${ExpenseReportStatus.DRAFT}`,
+        ),
+      );
+
+      await expect(controller.submit(mockExpenseReport.id)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should handle not found errors', async () => {
+      const nonExistentId = 'non-existent-id';
+      mockService.submit.mockRejectedValue(
+        new NotFoundException(`ExpenseReport with ID ${nonExistentId} not found`),
+      );
+
+      await expect(controller.submit(nonExistentId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

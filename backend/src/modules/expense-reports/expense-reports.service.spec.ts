@@ -4,8 +4,11 @@ import { Repository } from 'typeorm';
 import { ExpenseReportsService } from './expense-reports.service';
 import { ExpenseReportsRepository } from './expense-reports.repository';
 import { ExpenseReport } from './entities/expense-report.entity';
+import { Expense } from '../expenses/entities/expense.entity';
 import { ExpenseReportStatus } from '../../common/enums/expense-report-status.enum';
 import { QueryExpenseReportsDto, SortBy, SortOrder } from './dto/query-expense-reports.dto';
+import { CreateExpenseReportDto } from './dto/create-expense-report.dto';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 
 describe('ExpenseReportsService', () => {
   let service: ExpenseReportsService;
@@ -36,6 +39,10 @@ describe('ExpenseReportsService', () => {
     findWithFilters: jest.fn(),
   };
 
+  const mockExpenseRepository = {
+    save: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -43,6 +50,10 @@ describe('ExpenseReportsService', () => {
         {
           provide: getRepositoryToken(ExpenseReport),
           useValue: mockRepository,
+        },
+        {
+          provide: getRepositoryToken(Expense),
+          useValue: mockExpenseRepository,
         },
         {
           provide: ExpenseReportsRepository,
@@ -82,7 +93,7 @@ describe('ExpenseReportsService', () => {
       const result = await service.findAllPaginated(queryDto);
 
       expect(result).toEqual({
-        data: mockReports,
+        data: mockReports.map(r => ({ ...r, categories: [] })),
         meta: {
           page: 1,
           limit: 10,
@@ -112,7 +123,7 @@ describe('ExpenseReportsService', () => {
 
       const result = await service.findAllPaginated(queryDto);
 
-      expect(result.data).toEqual(mockReports);
+      expect(result.data).toEqual(mockReports.map(r => ({ ...r, categories: [] })));
       expect(result.meta.total).toBe(1);
       expect(mockCustomRepository.findWithFilters).toHaveBeenCalledWith(
         queryDto,
@@ -136,7 +147,7 @@ describe('ExpenseReportsService', () => {
 
       const result = await service.findAllPaginated(queryDto);
 
-      expect(result.data).toEqual(mockReports);
+      expect(result.data).toEqual(mockReports.map(r => ({ ...r, categories: [] })));
       expect(result.meta.total).toBe(1);
       expect(mockCustomRepository.findWithFilters).toHaveBeenCalledWith(
         queryDto,
@@ -161,7 +172,7 @@ describe('ExpenseReportsService', () => {
 
       const result = await service.findAllPaginated(queryDto);
 
-      expect(result.data).toEqual(mockReports);
+      expect(result.data).toEqual(mockReports.map(r => ({ ...r, categories: [] })));
       expect(result.meta.total).toBe(1);
       expect(mockCustomRepository.findWithFilters).toHaveBeenCalledWith(
         queryDto,
@@ -186,7 +197,7 @@ describe('ExpenseReportsService', () => {
 
       const result = await service.findAllPaginated(queryDto);
 
-      expect(result.data).toEqual(mockReports);
+      expect(result.data).toEqual(mockReports.map(r => ({ ...r, categories: [] })));
       expect(mockCustomRepository.findWithFilters).toHaveBeenCalledWith(
         queryDto,
       );
@@ -269,9 +280,170 @@ describe('ExpenseReportsService', () => {
 
       const result = await service.findAllPaginated(queryDto);
 
-      expect(result.data).toEqual(mockReports);
+      expect(result.data).toEqual(mockReports.map(r => ({ ...r, categories: [] })));
       expect(mockCustomRepository.findWithFilters).toHaveBeenCalledWith(
         queryDto,
+      );
+    });
+  });
+
+  describe('create', () => {
+    it('should create a new expense report successfully', async () => {
+      const createDto: CreateExpenseReportDto = {
+        userId: '123e4567-e89b-12d3-a456-426614174001',
+        title: 'Business Trip to Paris',
+        reportDate: '2024-01-15',
+      };
+
+      const createdReport = {
+        ...mockExpenseReport,
+        ...createDto,
+        reportDate: new Date(createDto.reportDate),
+      };
+
+      mockRepository.create.mockReturnValue(createdReport);
+      mockRepository.save.mockResolvedValue(createdReport);
+
+      const result = await service.create(createDto);
+
+      expect(mockRepository.create).toHaveBeenCalledWith(createDto);
+      expect(mockRepository.save).toHaveBeenCalledWith(createdReport);
+      expect(result).toEqual(createdReport);
+    });
+
+    it('should create expense report with default values', async () => {
+      const createDto: CreateExpenseReportDto = {
+        userId: '123e4567-e89b-12d3-a456-426614174001',
+        title: 'Q1 Expenses',
+        reportDate: '2024-01-01',
+      };
+
+      const createdReport = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        ...createDto,
+        reportDate: new Date(createDto.reportDate),
+        status: ExpenseReportStatus.DRAFT,
+        totalAmount: 0,
+        currency: 'EUR',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockRepository.create.mockReturnValue(createdReport);
+      mockRepository.save.mockResolvedValue(createdReport);
+
+      const result = await service.create(createDto);
+
+      expect(result.status).toBe(ExpenseReportStatus.DRAFT);
+      expect(result.totalAmount).toBe(0);
+      expect(result.currency).toBe('EUR');
+    });
+
+    it('should handle database errors during creation', async () => {
+      const createDto: CreateExpenseReportDto = {
+        userId: '123e4567-e89b-12d3-a456-426614174001',
+        title: 'Test Report',
+        reportDate: '2024-01-15',
+      };
+
+      mockRepository.create.mockReturnValue(createDto);
+      mockRepository.save.mockRejectedValue(new Error('Database error'));
+
+      await expect(service.create(createDto)).rejects.toThrow('Database error');
+    });
+
+    it('should handle foreign key constraint errors', async () => {
+      const createDto: CreateExpenseReportDto = {
+        userId: 'non-existent-user-id',
+        title: 'Test Report',
+        reportDate: '2024-01-15',
+      };
+
+      mockRepository.create.mockReturnValue(createDto);
+      mockRepository.save.mockRejectedValue({
+        code: 'SQLITE_CONSTRAINT',
+        message: 'FOREIGN KEY constraint failed',
+      });
+
+      await expect(service.create(createDto)).rejects.toMatchObject({
+        code: 'SQLITE_CONSTRAINT',
+      });
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return an expense report by id', async () => {
+      mockRepository.findOne.mockResolvedValue(mockExpenseReport);
+
+      const result = await service.findOne(mockExpenseReport.id);
+
+      expect(result).toEqual(mockExpenseReport);
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: mockExpenseReport.id },
+        relations: ['user'],
+      });
+    });
+
+    it('should throw NotFoundException when report not found', async () => {
+      const nonExistentId = 'non-existent-id';
+      mockRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.findOne(nonExistentId)).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.findOne(nonExistentId)).rejects.toThrow(
+        `ExpenseReport with ID ${nonExistentId} not found`,
+      );
+    });
+  });
+
+  describe('submit', () => {
+    it('should submit a draft expense report', async () => {
+      const draftReport = {
+        ...mockExpenseReport,
+        status: ExpenseReportStatus.DRAFT,
+      };
+
+      const submittedReport = {
+        ...draftReport,
+        status: ExpenseReportStatus.SUBMITTED,
+      };
+
+      mockRepository.findOne.mockResolvedValue(draftReport);
+      mockRepository.save.mockResolvedValue(submittedReport);
+
+      const result = await service.submit(draftReport.id);
+
+      expect(result.status).toBe(ExpenseReportStatus.SUBMITTED);
+      expect(mockRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: ExpenseReportStatus.SUBMITTED,
+        }),
+      );
+    });
+
+    it('should throw BadRequestException when report is not in DRAFT status', async () => {
+      const submittedReport = {
+        ...mockExpenseReport,
+        status: ExpenseReportStatus.SUBMITTED,
+      };
+
+      mockRepository.findOne.mockResolvedValue(submittedReport);
+
+      await expect(service.submit(submittedReport.id)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.submit(submittedReport.id)).rejects.toThrow(
+        `Report cannot be submitted. Current status is ${ExpenseReportStatus.SUBMITTED}, but must be ${ExpenseReportStatus.DRAFT}`,
+      );
+    });
+
+    it('should throw NotFoundException when report does not exist', async () => {
+      const nonExistentId = 'non-existent-id';
+      mockRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.submit(nonExistentId)).rejects.toThrow(
+        NotFoundException,
       );
     });
   });

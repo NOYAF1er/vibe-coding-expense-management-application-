@@ -22,6 +22,9 @@ export class ExpenseReportsRepository extends Repository<ExpenseReport> {
 
     const queryBuilder = this.createQueryBuilder('report');
 
+    // Load expenses relation to get categories
+    queryBuilder.leftJoinAndSelect('report.expenses', 'expense');
+
     // Apply search filter on title
     if (search) {
       queryBuilder.andWhere('report.title LIKE :search', {

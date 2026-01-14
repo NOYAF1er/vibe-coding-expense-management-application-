@@ -7,9 +7,11 @@ import { CreateExpenseReportDto } from './dto/create-expense-report.dto';
 import { UpdateExpenseReportDto } from './dto/update-expense-report.dto';
 import { QueryExpenseReportsDto } from './dto/query-expense-reports.dto';
 import { PaginatedExpenseReportsDto } from './dto/paginated-expense-reports.dto';
+import { ExpenseReportResponseDto } from './dto/expense-report-response.dto';
 import { ExpenseReportsRepository } from './expense-reports.repository';
 import { ExpenseReportStatus } from '../../common/enums/expense-report-status.enum';
 import { ExpenseStatus } from '../../common/enums/expense-status.enum';
+import { ExpenseCategory } from '../../common/enums/expense-category.enum';
 
 /**
  * Service for managing expense reports
@@ -53,14 +55,31 @@ export class ExpenseReportsService {
     const limit = queryDto.limit || 10;
     const totalPages = Math.ceil(total / limit);
 
+    // Transform data to include categories
+    const transformedData = data.map(report => this.transformReportWithCategories(report));
+
     return {
-      data,
+      data: transformedData,
       meta: {
         page,
         limit,
         total,
         totalPages,
       },
+    };
+  }
+
+  /**
+   * Transform expense report to include unique categories from expenses
+   */
+  private transformReportWithCategories(report: ExpenseReport): any {
+    const categories = report.expenses
+      ? Array.from(new Set(report.expenses.map(expense => expense.category)))
+      : [];
+
+    return {
+      ...report,
+      categories,
     };
   }
 

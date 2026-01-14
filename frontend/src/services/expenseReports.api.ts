@@ -12,7 +12,7 @@ import {
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 // TODO: Replace with actual user ID from authentication
-const MOCK_USER_ID = '46535c2f-b439-45f5-b707-fefb90b66304';
+const MOCK_USER_ID = '31196f2f-06e6-4e8f-b953-a8122bb4135e';
 
 export interface CreateExpenseReportPayload {
   title: string;

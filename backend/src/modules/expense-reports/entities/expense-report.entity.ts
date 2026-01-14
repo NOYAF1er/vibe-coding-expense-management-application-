@@ -10,6 +10,7 @@ import {
 import { BaseEntity } from '../../../common/entities/base.entity';
 import { ExpenseReportStatus } from '../../../common/enums/expense-report-status.enum';
 import { User } from '../../users/entities/user.entity';
+import { Expense } from '../../expenses/entities/expense.entity';
 
 /**
  * ExpenseReport entity representing a container for multiple expenses
@@ -58,7 +59,6 @@ export class ExpenseReport extends BaseEntity {
   @DeleteDateColumn()
   deletedAt?: Date;
 
-  // Relation will be added after Expense entity is created
-  // @OneToMany(() => Expense, (expense) => expense.report, { cascade: true })
-  // expenses!: Expense[];
+  @OneToMany(() => Expense, (expense) => expense.report, { cascade: true })
+  expenses?: Expense[];
 }

@@ -19,6 +19,9 @@ const categoryIcons: Record<ExpenseCategory, string> = {
   [ExpenseCategory.HOTEL]: 'hotel',
   [ExpenseCategory.TRANSPORT]: 'directions_car',
   [ExpenseCategory.OTHER]: 'more_horiz',
+  [ExpenseCategory.TRAVEL]: 'flight',
+  [ExpenseCategory.MEAL]: 'restaurant',
+  [ExpenseCategory.OFFICE_SUPPLIES]: 'shopping_cart',
 };
 
 const statusColors: Record<ExpenseReportStatus, string> = {

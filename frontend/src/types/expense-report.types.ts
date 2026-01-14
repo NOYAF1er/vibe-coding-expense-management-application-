@@ -77,6 +77,7 @@ export interface ExpenseReportResponse {
   rejectionReason?: string;
   createdAt: string;
   updatedAt: string;
+  categories?: ExpenseCategory[];
 }
 
 /**
