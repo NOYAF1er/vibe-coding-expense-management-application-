@@ -19,13 +19,16 @@ export class UserResponseDto {
   email!: string;
 
   @Exclude()
-  password!: string;
+  password?: string;
 
   @ApiProperty({ enum: UserRole })
   role!: UserRole;
 
   @ApiProperty()
   isActive!: boolean;
+
+  @ApiProperty({ required: false })
+  lastLoginAt?: Date;
 
   @ApiProperty()
   createdAt!: Date;

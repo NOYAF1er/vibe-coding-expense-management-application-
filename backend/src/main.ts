@@ -33,6 +33,11 @@ async function bootstrap() {
     .setDescription('Production-ready API documentation')
     .setVersion('1.0')
     .addTag('hello')
+    .addTag('auth')
+    .addTag('users')
+    .addTag('expense-reports')
+    .addTag('expenses')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

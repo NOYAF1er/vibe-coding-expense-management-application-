@@ -17,8 +17,8 @@ export class User extends BaseEntity {
   @Column({ unique: true, length: 255 })
   email!: string;
 
-  @Column({ length: 255 })
-  password!: string; // Hashed password
+  @Column({ length: 255, nullable: true })
+  password?: string; // Hashed password (nullable for OAuth users)
 
   @Index()
   @Column({
@@ -30,6 +30,9 @@ export class User extends BaseEntity {
 
   @Column({ default: true })
   isActive!: boolean;
+
+  @Column({ type: 'datetime', nullable: true })
+  lastLoginAt?: Date;
 
   @DeleteDateColumn()
   deletedAt?: Date;
