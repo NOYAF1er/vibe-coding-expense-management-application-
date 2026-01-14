@@ -77,6 +77,23 @@ class ExpenseReportService {
       throw new Error('Failed to delete expense report');
     }
   }
+
+  /**
+   * Submit an expense report (change status from DRAFT to SUBMITTED)
+   */
+  async submit(id: string): Promise<ExpenseReportDetails> {
+    const response = await fetch(`${this.baseUrl}/${id}/submit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to submit expense report' }));
+      throw new Error(error.message || 'Failed to submit expense report');
+    }
+    return response.json();
+  }
 }
 
 export const expenseReportService = new ExpenseReportService();

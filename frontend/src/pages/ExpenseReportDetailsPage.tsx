@@ -36,9 +36,11 @@ const getStatusBadgeClasses = (status: ExpenseStatus): string => {
   const statusMap: Record<ExpenseStatus, string> = {
     [ExpenseStatus.SUBMITTED]:
       'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-    [ExpenseStatus.ACCEPTED]:
+    [ExpenseStatus.REVIEWED]:
+      'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+    [ExpenseStatus.APPROVED]:
       'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-    [ExpenseStatus.DENIED]:
+    [ExpenseStatus.REJECTED]:
       'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
   };
   return statusMap[status] || statusMap[ExpenseStatus.SUBMITTED];
@@ -55,9 +57,9 @@ const assignExpenseStatus = (expenses: Expense[], reportStatus: string): Expense
     if (index === 0) {
       status = ExpenseStatus.SUBMITTED;
     } else if (index === 2) {
-      status = ExpenseStatus.DENIED;
+      status = ExpenseStatus.REJECTED;
     } else {
-      status = ExpenseStatus.ACCEPTED;
+      status = ExpenseStatus.APPROVED;
     }
     return { ...expense, status };
   });
@@ -155,14 +157,32 @@ export function ExpenseReportDetailsPage() {
     navigate('/');
   };
 
-  const handleSubmitReport = () => {
-    // TODO: Implement submit report functionality
-    console.log('Submit report:', id);
+  const handleSubmitReport = async () => {
+    if (!id) return;
+
+    try {
+      await expenseReportService.submit(id);
+      // Refresh the report data to show updated status
+      const reportData = await expenseReportService.getById(id);
+      setReport(reportData);
+      
+      // Refresh expenses to show updated statuses
+      const expensesData = await expensesService.getByReportId(id);
+      setExpenses(expensesData);
+      
+      alert('Report submitted successfully!');
+    } catch (error) {
+      console.error('Failed to submit report:', error);
+      alert(error instanceof Error ? error.message : 'Failed to submit report. Please try again.');
+    }
   };
 
   const handleAddExpense = () => {
-    // TODO: Implement add expense functionality
-    console.log('Add expense to report:', id);
+    navigate(`/reports/${id}/add-expense`);
+  };
+
+  const handleViewExpenseDetails = (expenseId: string) => {
+    navigate(`/reports/${id}/expenses/${expenseId}`);
   };
 
   if (loading) {
@@ -241,7 +261,8 @@ export function ExpenseReportDetailsPage() {
             {expenses.map((expense) => (
               <div
                 key={expense.id}
-                className="bg-surface-light dark:bg-surface-dark rounded-lg p-4"
+                onClick={() => handleViewExpenseDetails(expense.id)}
+                className="bg-surface-light dark:bg-surface-dark rounded-lg p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
                 <div className="flex items-center gap-4">
                   {/* Category Icon */}

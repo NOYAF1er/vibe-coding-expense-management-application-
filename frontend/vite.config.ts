@@ -26,6 +26,9 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
+      include: [
+        'src/**/*.{ts,tsx}',
+      ],
       exclude: [
         'node_modules/',
         'src/test/',
@@ -36,7 +39,11 @@ export default defineConfig({
         '**/AppRouter.tsx',
         '**/*.config.js',
         '**/*.config.ts',
-        '**/pages/**',
+        '**/pages/HelloPage.tsx',
+        '**/pages/ExpenseReportsPage.tsx',
+        '**/pages/NewReportPage.tsx',
+        '**/pages/ExpenseReportDetailsPage.tsx',
+        '**/pages/ExpenseReportDetailsDemoPage.tsx',
         '**/hooks/**',
       ],
       thresholds: {

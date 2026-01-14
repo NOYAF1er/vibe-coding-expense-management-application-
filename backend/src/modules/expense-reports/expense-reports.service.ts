@@ -1,12 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ExpenseReport } from './entities/expense-report.entity';
+import { Expense } from '../expenses/entities/expense.entity';
 import { CreateExpenseReportDto } from './dto/create-expense-report.dto';
 import { UpdateExpenseReportDto } from './dto/update-expense-report.dto';
 import { QueryExpenseReportsDto } from './dto/query-expense-reports.dto';
 import { PaginatedExpenseReportsDto } from './dto/paginated-expense-reports.dto';
 import { ExpenseReportsRepository } from './expense-reports.repository';
+import { ExpenseReportStatus } from '../../common/enums/expense-report-status.enum';
+import { ExpenseStatus } from '../../common/enums/expense-status.enum';
 
 /**
  * Service for managing expense reports
@@ -16,6 +19,8 @@ export class ExpenseReportsService {
   constructor(
     @InjectRepository(ExpenseReport)
     private readonly reportRepository: Repository<ExpenseReport>,
+    @InjectRepository(Expense)
+    private readonly expenseRepository: Repository<Expense>,
     private readonly expenseReportsRepository: ExpenseReportsRepository,
   ) {}
 
@@ -109,5 +114,23 @@ export class ExpenseReportsService {
     // For now, return the current total
     // This will be updated once Expense entity is created
     return Number(report.totalAmount);
+  }
+
+  /**
+   * Submit an expense report (change status from DRAFT to SUBMITTED)
+   * All expenses are already in SUBMITTED status by default
+   */
+  async submit(id: string): Promise<ExpenseReport> {
+    const report = await this.findOne(id);
+    
+    if (report.status !== ExpenseReportStatus.DRAFT) {
+      throw new BadRequestException(
+        `Report cannot be submitted. Current status is ${report.status}, but must be ${ExpenseReportStatus.DRAFT}`
+      );
+    }
+
+    // Update report status
+    report.status = ExpenseReportStatus.SUBMITTED;
+    return this.reportRepository.save(report);
   }
 }

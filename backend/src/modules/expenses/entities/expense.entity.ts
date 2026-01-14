@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
 import { ExpenseCategory } from '../../../common/enums/expense-category.enum';
+import { ExpenseStatus } from '../../../common/enums/expense-status.enum';
 import { ExpenseReport } from '../../expense-reports/entities/expense-report.entity';
 
 /**
@@ -42,6 +43,14 @@ export class Expense extends BaseEntity {
     enum: ExpenseCategory,
   })
   category!: ExpenseCategory;
+
+  @Index()
+  @Column({
+    type: 'text',
+    enum: ExpenseStatus,
+    default: ExpenseStatus.SUBMITTED,
+  })
+  status!: ExpenseStatus;
 
   @Column({ default: true })
   receiptRequired!: boolean;

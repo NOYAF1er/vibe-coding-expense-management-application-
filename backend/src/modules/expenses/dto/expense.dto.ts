@@ -11,6 +11,7 @@ import {
   Min,
 } from 'class-validator';
 import { ExpenseCategory } from '../../../common/enums/expense-category.enum';
+import { ExpenseStatus } from '../../../common/enums/expense-status.enum';
 
 /**
  * DTO for creating a new expense
@@ -78,6 +79,9 @@ export class ExpenseResponseDto {
 
   @ApiProperty({ enum: ExpenseCategory })
   category!: ExpenseCategory;
+
+  @ApiProperty({ enum: ExpenseStatus })
+  status!: ExpenseStatus;
 
   @ApiProperty()
   receiptRequired!: boolean;

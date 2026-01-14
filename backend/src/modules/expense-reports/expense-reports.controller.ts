@@ -90,6 +90,15 @@ export class ExpenseReportsController {
     return { total };
   }
 
+  @Post(':id/submit')
+  @ApiOperation({ summary: 'Submit expense report (change status from DRAFT to SUBMITTED)' })
+  @ApiResponse({ status: 200, description: 'Expense report submitted', type: ExpenseReportResponseDto })
+  @ApiResponse({ status: 404, description: 'Expense report not found' })
+  @ApiResponse({ status: 400, description: 'Report cannot be submitted (not in DRAFT status)' })
+  async submit(@Param('id') id: string): Promise<ExpenseReportResponseDto> {
+    return this.reportsService.submit(id);
+  }
+
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete expense report (soft delete)' })

@@ -42,8 +42,9 @@ export enum SortOrder {
  */
 export enum ExpenseStatus {
   SUBMITTED = 'Submitted',
-  ACCEPTED = 'Accepted',
-  DENIED = 'Denied',
+  REVIEWED = 'Reviewed',
+  APPROVED = 'Approved',
+  REJECTED = 'Rejected',
 }
 
 export interface Expense {
