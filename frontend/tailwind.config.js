@@ -15,6 +15,12 @@ export default {
         "foreground-dark": "#f9fafb",
         "muted-light": "#6b7280",
         "muted-dark": "#9ca3af",
+        "text-light": "#111827",
+        "text-dark": "#f3f4f6",
+        "subtle-light": "#e5e7eb",
+        "subtle-dark": "#374151",
+        "placeholder-light": "#9ca3af",
+        "placeholder-dark": "#6b7280",
       },
       fontFamily: {
         display: ["Inter", "sans-serif"],

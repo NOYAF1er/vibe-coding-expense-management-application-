@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { SearchInput } from '../components/SearchInput';
 import { FilterButton } from '../components/FilterButton';
@@ -49,6 +50,7 @@ const mockReports: ExpenseReportListItem[] = [
 ];
 
 export const ExpenseReportsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [reports] = useState<ExpenseReportListItem[]>(mockReports);
   const [loading] = useState(false);
   const [error] = useState<string | null>(null);
@@ -59,7 +61,7 @@ export const ExpenseReportsPage: React.FC = () => {
   ]);
 
   const handleAddClick = () => {
-    console.log('Add new expense report');
+    navigate('/new-report');
   };
 
   const handleFilterClick = () => {
