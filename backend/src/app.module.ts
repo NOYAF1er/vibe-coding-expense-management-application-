@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HelloModule } from './modules/hello/hello.module';
+import { UsersModule } from './modules/users/users.module';
+import { ExpenseReportsModule } from './modules/expense-reports/expense-reports.module';
+import { ExpensesModule } from './modules/expenses/expenses.module';
 
 /**
  * Root application module
@@ -16,6 +19,9 @@ import { HelloModule } from './modules/hello/hello.module';
       logging: process.env.NODE_ENV === 'development',
     }),
     HelloModule,
+    UsersModule,
+    ExpenseReportsModule,
+    ExpensesModule,
   ],
 })
 export class AppModule {}

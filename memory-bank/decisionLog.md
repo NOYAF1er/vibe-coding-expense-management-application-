@@ -229,3 +229,248 @@ This file records architectural and implementation decisions using a list format
 ---
 
 **2026-01-13 16:50:51** - Initial architectural decisions documented
+
+---
+
+## [2026-01-14 09:48:00] Expense Management System - Data Architecture
+
+### Decision 1: Single Status System (Report-Level Only)
+
+**Decision**: Remove status field from individual Expense entities, maintain only on ExpenseReport
+
+**Rationale**:
+- Prevents conflicting states between report and individual expenses
+- Simplifies workflow and business logic
+- Report-level approval is standard practice in expense management
+- Individual expense validation happens before submission
+- Reduces complexity in status management
+
+**Implementation Details**:
+- ExpenseReport status: `DRAFT`, `SUBMITTED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED`, `PAID`
+- Expense entity: No status field (inherits state from parent report)
+- Validation ensures expenses cannot be modified after report submission
+
+---
+
+### Decision 2: Password Hashing with bcrypt (No JWT Yet)
+
+**Decision**: Implement password hashing with bcrypt, defer JWT authentication to Phase 2
+
+**Rationale**:
+- Focus on core CRUD functionality first
+- Password field required for future authentication
+- JWT implementation adds complexity (guards, strategies, tokens)
+- Simpler testing without authentication middleware
+- Allows incremental development approach
+
+**Implementation Details**:
+- User entity has `password` field (hashed with bcrypt)
+- Service method uses bcrypt.hash() with salt rounds of 10
+- No authentication guards or JWT tokens in MVP
+- Password excluded from API responses using `@Exclude()` decorator
+- ClassSerializerInterceptor applied globally
+
+---
+
+### Decision 3: Local Filesystem Storage for Attachments
+
+**Decision**: Store attachment files in local `/uploads` directory
+
+**Rationale**:
+- Simpler for development and testing
+- No external dependencies (AWS S3, Google Cloud Storage)
+- Easy to migrate to cloud storage later
+- Sufficient for MVP and proof of concept
+- Reduces infrastructure complexity
+
+**Implementation Details**:
+- Files stored in: `/uploads/attachments/{expenseId}/{filename}`
+- Database stores metadata: `fileName`, `fileUrl`, `mimeType`, `fileSize`
+- Future migration path to cloud storage is straightforward
+- File upload endpoint to be implemented in Phase 2
+
+---
+
+### Decision 4: Cascade Delete Strategy
+
+**Decision**: Enable cascade deletes for parent-child relationships
+
+**Rationale**:
+- Maintains referential integrity automatically
+- Prevents orphaned records in database
+- Standard practice for owned relationships
+- Simplifies deletion logic in services
+- TypeORM handles cascade operations efficiently
+
+**Implementation Details**:
+- User -> ExpenseReport: `cascade: ['remove']` (soft delete)
+- ExpenseReport -> Expense: `cascade: true, onDelete: 'CASCADE'`
+- Expense -> Attachment: `cascade: true, onDelete: 'CASCADE'`
+
+---
+
+### Decision 5: Soft Delete for User and ExpenseReport
+
+**Decision**: Use soft delete for User and ExpenseReport entities, hard delete for Expense and Attachment
+
+**Rationale**:
+- Preserves audit trail for reports and users
+- Complies with data retention policies
+- Allows recovery of accidentally deleted data
+- Expenses and Attachments are children, follow parent lifecycle
+- Reduces database bloat for child entities
+
+**Implementation Details**:
+- Add `@DeleteDateColumn()` to User and ExpenseReport
+- Use `softRemove()` method in services
+- Regular `remove()` for Expense and Attachment
+- Soft-deleted records excluded from queries by default
+
+---
+
+### Decision 6: Single Currency (EUR) with Future Expansion
+
+**Decision**: Support only EUR currency for MVP, add currency field for future multi-currency support
+
+**Rationale**:
+- Simplifies calculations and validation
+- Avoids exchange rate complexity
+- Easy to extend later with currency conversion
+- Meets current business requirements
+- Field structure supports future expansion
+
+**Implementation Details**:
+- Add `currency` field with default 'EUR' (ISO 4217 code)
+- All amounts in same currency
+- Future: Add currency conversion service
+- Future: Support multiple currencies per report
+
+---
+
+### Decision 7: Explicit Foreign Key Columns
+
+**Decision**: Add explicit foreign key columns alongside TypeORM relations
+
+**Rationale**:
+- Improves query performance
+- Makes relationships explicit in code
+- Easier to write raw SQL queries if needed
+- Better database schema visibility
+- Follows TypeORM best practices
+
+**Implementation Details**:
+```typescript
+@Column()
+userId: string;
+
+@ManyToOne(() => User)
+@JoinColumn({ name: 'userId' })
+user: User;
+```
+
+---
+
+### Decision 8: Decimal Precision for Money Fields
+
+**Decision**: Use `decimal(10, 2)` for all monetary amounts
+
+**Rationale**:
+- Prevents floating-point precision errors
+- Standard for financial applications
+- Supports amounts up to 99,999,999.99
+- Two decimal places for cents/centimes
+- Database-level precision guarantee
+
+**Implementation Details**:
+```typescript
+@Column({ type: 'decimal', precision: 10, scale: 2 })
+amount: number;
+```
+
+---
+
+### Decision 9: UUID Primary Keys
+
+**Decision**: Use UUID (v4) for all entity primary keys
+
+**Rationale**:
+- Globally unique identifiers
+- Better for distributed systems
+- Prevents ID enumeration attacks
+- No auto-increment collisions
+- Industry standard for modern applications
+
+**Implementation Details**:
+```typescript
+@PrimaryGeneratedColumn('uuid')
+id: string;
+```
+
+---
+
+### Decision 10: Comprehensive Testing Strategy
+
+**Decision**: Implement unit tests for all layers with ≥80% coverage target
+
+**Rationale**:
+- Ensures code quality and reliability
+- Catches bugs early in development
+- Facilitates refactoring and maintenance
+- Documents expected behavior
+- Industry best practice
+
+**Implementation Details**:
+- Entity tests: Validate structure
+- DTO tests: Validate validation rules with class-validator
+- Service tests: Unit tests with mocked repositories
+- Controller tests: Integration tests with mocked services
+- Jest for testing framework
+- Coverage reports with `npm run test:coverage`
+
+---
+
+### Decision 11: Four-Entity Data Model
+
+**Decision**: Implement exactly 4 entities: User, ExpenseReport, Expense, Attachment
+
+**Rationale**:
+- Clear hierarchy and relationships
+- Matches business domain model
+- Proper separation of concerns
+- Scalable architecture
+- Standard expense management pattern
+
+**Implementation Details**:
+- User (1) -> ExpenseReport (N)
+- ExpenseReport (1) -> Expense (N)
+- Expense (1) -> Attachment (N)
+- All entities extend BaseEntity with id, createdAt, updatedAt
+
+---
+
+### Decision 12: Fixed Category Enum (No Category Entity)
+
+**Decision**: Implement expense categories as enum, not as separate entity
+
+**Rationale**:
+- Categories are fixed and predefined
+- No need for dynamic category management
+- Simpler data model
+- Better type safety
+- Prevents invalid categories
+
+**Implementation Details**:
+```typescript
+enum ExpenseCategory {
+  TRAVEL = 'TRAVEL',
+  MEAL = 'MEAL',
+  HOTEL = 'HOTEL',
+  TRANSPORT = 'TRANSPORT',
+  OFFICE_SUPPLIES = 'OFFICE_SUPPLIES',
+  OTHER = 'OTHER'
+}
+```
+
+---
+
+**2026-01-14 09:48:00** - Expense management system architectural decisions documented

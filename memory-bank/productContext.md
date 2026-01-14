@@ -84,3 +84,38 @@ The "Hello" module demonstrates:
 ---
 
 **2026-01-13 16:49:30** - Initial project context created for full-stack TypeScript monorepo initialization
+
+**2026-01-14 09:49:00** - Expense Management System context added
+
+## Expense Management Application
+
+### Business Domain
+The application manages employee expense reports with the following workflow:
+1. Employees create expense reports and add individual expenses
+2. Expenses can have attachments (receipts, invoices)
+3. Managers review and approve/reject reports
+4. Approved reports are marked as paid
+
+### Data Model
+**Four Core Entities**:
+1. **User** - Application users (employees, managers, admins)
+2. **ExpenseReport** - Container for multiple expenses
+3. **Expense** - Individual expense items
+4. **Attachment** - Receipt/proof files
+
+### Key Features
+- User management with role-based access (EMPLOYEE, MANAGER, ADMIN)
+- Expense report creation and management
+- Individual expense tracking with categories
+- Attachment support for receipts
+- Report workflow (Draft → Submitted → Under Review → Approved/Rejected → Paid)
+- Soft delete for audit trail
+- Comprehensive validation and error handling
+
+### Technical Specifications
+- **Backend**: NestJS + TypeORM + SQLite
+- **Entities**: 4 entities with proper relationships
+- **API**: RESTful with Swagger documentation
+- **Testing**: ≥80% coverage with Jest
+- **Security**: Password hashing with bcrypt (JWT deferred to Phase 2)
+- **Storage**: Local filesystem for attachments (cloud migration path available)
