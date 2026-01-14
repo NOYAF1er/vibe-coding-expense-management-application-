@@ -103,6 +103,10 @@ export function ExpenseDetailsPage() {
     }
   };
 
+  const handleEdit = () => {
+    navigate(`/reports/${reportId}/edit-expense/${expenseId}`);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark font-display text-content-light dark:text-content-dark">
       {/* Header */}
@@ -146,7 +150,7 @@ export function ExpenseDetailsPage() {
                     {index !== expense.history.length - 1 && (
                       <span
                         aria-hidden="true"
-                        className="absolute top-1 left-4 -ml-[2px] h-full w-0.5 bg-border-light dark:bg-border-dark"
+                        className="absolute top-8 left-4 -ml-px h-full w-px bg-subtle-light/30 dark:bg-subtle-dark/30"
                       ></span>
                     )}
                     <div className="relative flex items-start space-x-3">
@@ -155,7 +159,7 @@ export function ExpenseDetailsPage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div>
-                          <p className="font-medium">{item.status}</p>
+                          <p className="font-medium text-content-light dark:text-content-dark">{item.status}</p>
                           <p className="mt-0.5 text-sm text-subtle-light dark:text-subtle-dark">{item.date}</p>
                         </div>
                       </div>
@@ -171,7 +175,10 @@ export function ExpenseDetailsPage() {
       {/* Footer */}
       <footer className="sticky bottom-0 bg-background-light dark:bg-background-dark border-t border-border-light dark:border-border-dark pt-4 px-4 pb-safe-bottom">
         <div className="flex items-center space-x-3 mb-4">
-          <button className="w-full h-12 flex items-center justify-center rounded-lg bg-primary/20 dark:bg-primary/30 text-primary font-bold">
+          <button
+            onClick={handleEdit}
+            className="w-full h-12 flex items-center justify-center rounded-lg bg-primary/20 dark:bg-primary/30 text-primary font-bold"
+          >
             Edit
           </button>
           <button className="w-full h-12 flex items-center justify-center rounded-lg bg-primary text-white font-bold">
