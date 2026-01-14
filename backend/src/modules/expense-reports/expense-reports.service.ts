@@ -4,6 +4,9 @@ import { Repository } from 'typeorm';
 import { ExpenseReport } from './entities/expense-report.entity';
 import { CreateExpenseReportDto } from './dto/create-expense-report.dto';
 import { UpdateExpenseReportDto } from './dto/update-expense-report.dto';
+import { QueryExpenseReportsDto } from './dto/query-expense-reports.dto';
+import { PaginatedExpenseReportsDto } from './dto/paginated-expense-reports.dto';
+import { ExpenseReportsRepository } from './expense-reports.repository';
 
 /**
  * Service for managing expense reports
@@ -13,6 +16,7 @@ export class ExpenseReportsService {
   constructor(
     @InjectRepository(ExpenseReport)
     private readonly reportRepository: Repository<ExpenseReport>,
+    private readonly expenseReportsRepository: ExpenseReportsRepository,
   ) {}
 
   /**
@@ -24,12 +28,35 @@ export class ExpenseReportsService {
   }
 
   /**
-   * Find all expense reports
+   * Find all expense reports (deprecated - use findAllPaginated instead)
    */
   async findAll(): Promise<ExpenseReport[]> {
     return this.reportRepository.find({
       relations: ['user'],
     });
+  }
+
+  /**
+   * Find expense reports with pagination, search, filters, and sorting
+   */
+  async findAllPaginated(
+    queryDto: QueryExpenseReportsDto,
+  ): Promise<PaginatedExpenseReportsDto> {
+    const [data, total] = await this.expenseReportsRepository.findWithFilters(queryDto);
+
+    const page = queryDto.page || 1;
+    const limit = queryDto.limit || 10;
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
   }
 
   /**

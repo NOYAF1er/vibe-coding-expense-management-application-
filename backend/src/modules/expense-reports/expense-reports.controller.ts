@@ -8,12 +8,16 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { ExpenseReportsService } from './expense-reports.service';
 import { CreateExpenseReportDto } from './dto/create-expense-report.dto';
 import { UpdateExpenseReportDto } from './dto/update-expense-report.dto';
 import { ExpenseReportResponseDto } from './dto/expense-report-response.dto';
+import { QueryExpenseReportsDto, SortBy, SortOrder } from './dto/query-expense-reports.dto';
+import { PaginatedExpenseReportsDto } from './dto/paginated-expense-reports.dto';
+import { ExpenseReportStatus } from '../../common/enums/expense-report-status.enum';
 
 /**
  * Controller for expense report management
@@ -31,10 +35,25 @@ export class ExpenseReportsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all expense reports' })
-  @ApiResponse({ status: 200, description: 'List of expense reports', type: [ExpenseReportResponseDto] })
-  async findAll(): Promise<ExpenseReportResponseDto[]> {
-    return this.reportsService.findAll();
+  @ApiOperation({
+    summary: 'Get expense reports with pagination, search, filters, and sorting',
+    description: 'Retrieve a paginated list of expense reports with optional search, status filter, amount range filter, and sorting capabilities'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated list of expense reports',
+    type: PaginatedExpenseReportsDto
+  })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)', example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 10, max: 100)', example: 10 })
+  @ApiQuery({ name: 'search', required: false, type: String, description: 'Search term for title field', example: 'Client' })
+  @ApiQuery({ name: 'status', required: false, enum: ExpenseReportStatus, description: 'Filter by status', example: ExpenseReportStatus.SUBMITTED })
+  @ApiQuery({ name: 'minAmount', required: false, type: Number, description: 'Minimum amount filter', example: 50 })
+  @ApiQuery({ name: 'maxAmount', required: false, type: Number, description: 'Maximum amount filter', example: 500 })
+  @ApiQuery({ name: 'sortBy', required: false, enum: SortBy, description: 'Field to sort by (default: reportDate)', example: SortBy.TOTAL_AMOUNT })
+  @ApiQuery({ name: 'order', required: false, enum: SortOrder, description: 'Sort order (default: desc)', example: SortOrder.ASC })
+  async findAll(@Query() queryDto: QueryExpenseReportsDto): Promise<PaginatedExpenseReportsDto> {
+    return this.reportsService.findAllPaginated(queryDto);
   }
 
   @Get(':id')
