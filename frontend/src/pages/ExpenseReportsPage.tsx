@@ -3,7 +3,7 @@
  * Main page displaying the list of expense reports
  */
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { SearchInput } from '../components/SearchInput';
@@ -11,54 +11,70 @@ import { FilterButton } from '../components/FilterButton';
 import { FilterChips } from '../components/FilterChips';
 import { ExpenseReportCard } from '../components/ExpenseReportCard';
 import { BottomNav } from '../components/BottomNav';
-import { ExpenseReportListItem, ExpenseReportStatus, ExpenseCategory } from '../types/expense-report.types';
+import {
+  ExpenseReportListItem,
+  ExpenseReportResponse,
+  QueryExpenseReportsParams,
+  SortBy,
+  SortOrder,
+} from '../types/expense-report.types';
+import { useExpenseReports } from '../hooks/useExpenseReports';
 
-// Mock data matching the HTML design
-const mockReports: ExpenseReportListItem[] = [
-  {
-    id: '1',
-    title: 'Q4 Client On-site',
-    date: '2023-10-26',
-    totalAmount: 175.00,
-    status: ExpenseReportStatus.SUBMITTED,
-    categories: [ExpenseCategory.RESTAURANT, ExpenseCategory.FLIGHT],
-  },
-  {
-    id: '2',
-    title: 'October Office Supplies',
-    date: '2023-10-24',
-    totalAmount: 75.00,
-    status: ExpenseReportStatus.VALIDATED,
-    categories: [ExpenseCategory.SHOPPING_CART],
-  },
-  {
-    id: '3',
-    title: 'Team Offsite Event',
-    date: '2023-10-22',
-    totalAmount: 215.00,
-    status: ExpenseReportStatus.PAID,
-    categories: [ExpenseCategory.GROUPS, ExpenseCategory.LOCAL_PARKING],
-  },
-  {
-    id: '4',
-    title: 'Commute & Meals',
-    date: '2023-10-21',
-    totalAmount: 40.00,
-    status: ExpenseReportStatus.CREATED,
-    categories: [ExpenseCategory.LOCAL_PARKING, ExpenseCategory.RESTAURANT],
-  },
-];
+/**
+ * Transform backend response to list item format
+ * Note: Backend doesn't return categories, so we use empty array for now
+ * TODO: Fetch expenses for each report to get actual categories
+ */
+function transformToListItem(report: ExpenseReportResponse): ExpenseReportListItem {
+  return {
+    id: report.id,
+    title: report.title,
+    date: report.reportDate,
+    totalAmount: report.totalAmount,
+    status: report.status,
+    categories: [], // TODO: Fetch from expenses
+  };
+}
 
 export const ExpenseReportsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [reports] = useState<ExpenseReportListItem[]>(mockReports);
-  const [loading] = useState(false);
-  const [error] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterChips, setFilterChips] = useState([
-    { id: 'status', label: 'Status: Submitted' },
-    { id: 'sort', label: 'Amount: High to Low' },
-  ]);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [filterChips, setFilterChips] = useState<Array<{ id: string; label: string }>>([]);
+
+  // Debounce search query to avoid too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Build query parameters from current state
+  const queryParams = useMemo<QueryExpenseReportsParams>(() => {
+    const params: QueryExpenseReportsParams = {
+      page: 1,
+      limit: 50,
+      sortBy: SortBy.REPORT_DATE,
+      order: SortOrder.DESC,
+    };
+
+    // Add search if present
+    if (debouncedSearch) {
+      params.search = debouncedSearch;
+    }
+
+    return params;
+  }, [debouncedSearch]);
+
+  // Fetch expense reports from backend
+  const { reports, loading, error, meta } = useExpenseReports(queryParams);
+
+  // Transform backend data to list items
+  const listItems = useMemo<ExpenseReportListItem[]>(() => {
+    return reports.map(transformToListItem);
+  }, [reports]);
 
   const handleAddClick = () => {
     navigate('/new-report');
@@ -66,6 +82,7 @@ export const ExpenseReportsPage: React.FC = () => {
 
   const handleFilterClick = () => {
     console.log('Open filter modal');
+    // TODO: Implement filter modal
   };
 
   const handleRemoveChip = (chipId: string) => {
@@ -74,11 +91,8 @@ export const ExpenseReportsPage: React.FC = () => {
 
   const handleReportClick = (reportId: string) => {
     console.log('View report:', reportId);
+    // TODO: Navigate to report detail page
   };
-
-  const filteredReports = reports.filter((report) =>
-    report.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
     <div className="flex flex-col min-h-screen bg-background-light">
@@ -92,37 +106,48 @@ export const ExpenseReportsPage: React.FC = () => {
             <FilterButton onClick={handleFilterClick} />
           </div>
 
-          <FilterChips chips={filterChips} onRemove={handleRemoveChip} />
+          {filterChips.length > 0 && (
+            <FilterChips chips={filterChips} onRemove={handleRemoveChip} />
+          )}
         </div>
 
         <div className="px-4 space-y-4">
           {loading && (
             <div className="text-center py-8 text-muted-light dark:text-muted-dark">
-              Loading...
+              Loading expense reports...
             </div>
           )}
 
           {error && (
             <div className="text-center py-8 text-red-500">
-              {error}
+              Error: {error}
             </div>
           )}
 
-          {!loading && !error && filteredReports.length === 0 && (
+          {!loading && !error && listItems.length === 0 && (
             <div className="text-center py-8 text-muted-light dark:text-muted-dark">
-              No expense reports found
+              {searchQuery
+                ? 'No expense reports found matching your search'
+                : 'No expense reports found. Create your first report!'}
             </div>
           )}
 
-          {!loading &&
-            !error &&
-            filteredReports.map((report) => (
-              <ExpenseReportCard
-                key={report.id}
-                report={report}
-                onClick={() => handleReportClick(report.id)}
-              />
-            ))}
+          {!loading && !error && listItems.length > 0 && (
+            <>
+              {meta && (
+                <div className="text-sm text-muted-light dark:text-muted-dark mb-2">
+                  Showing {listItems.length} of {meta.total} reports
+                </div>
+              )}
+              {listItems.map((report) => (
+                <ExpenseReportCard
+                  key={report.id}
+                  report={report}
+                  onClick={() => handleReportClick(report.id)}
+                />
+              ))}
+            </>
+          )}
         </div>
       </main>
 

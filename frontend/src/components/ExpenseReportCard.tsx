@@ -22,25 +22,21 @@ const categoryIcons: Record<ExpenseCategory, string> = {
 };
 
 const statusColors: Record<ExpenseReportStatus, string> = {
-  [ExpenseReportStatus.CREATED]: 'status-created',
+  [ExpenseReportStatus.DRAFT]: 'status-created',
   [ExpenseReportStatus.SUBMITTED]: 'status-submitted',
   [ExpenseReportStatus.UNDER_REVIEW]: 'status-submitted',
-  [ExpenseReportStatus.VALIDATED]: 'status-validated',
   [ExpenseReportStatus.APPROVED]: 'status-validated',
   [ExpenseReportStatus.PAID]: 'status-paid',
   [ExpenseReportStatus.REJECTED]: 'status-denied',
-  [ExpenseReportStatus.DRAFT]: 'status-created',
 };
 
 const statusLabels: Record<ExpenseReportStatus, string> = {
-  [ExpenseReportStatus.CREATED]: 'Created',
+  [ExpenseReportStatus.DRAFT]: 'Draft',
   [ExpenseReportStatus.SUBMITTED]: 'Submitted',
   [ExpenseReportStatus.UNDER_REVIEW]: 'Under Review',
-  [ExpenseReportStatus.VALIDATED]: 'Validated',
   [ExpenseReportStatus.APPROVED]: 'Approved',
   [ExpenseReportStatus.PAID]: 'Paid',
-  [ExpenseReportStatus.REJECTED]: 'Denied',
-  [ExpenseReportStatus.DRAFT]: 'Draft',
+  [ExpenseReportStatus.REJECTED]: 'Rejected',
 };
 
 export const ExpenseReportCard: React.FC<ExpenseReportCardProps> = ({ report, onClick }) => {

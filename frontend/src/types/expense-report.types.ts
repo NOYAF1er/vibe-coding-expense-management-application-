@@ -1,5 +1,6 @@
 /**
  * Expense Report Types
+ * Aligned with backend DTOs
  */
 
 export enum ExpenseReportStatus {
@@ -9,8 +10,6 @@ export enum ExpenseReportStatus {
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
   PAID = 'PAID',
-  CREATED = 'CREATED',
-  VALIDATED = 'VALIDATED',
 }
 
 export enum ExpenseCategory {
@@ -24,6 +23,17 @@ export enum ExpenseCategory {
   OTHER = 'OTHER',
 }
 
+export enum SortBy {
+  REPORT_DATE = 'reportDate',
+  TOTAL_AMOUNT = 'totalAmount',
+  CREATED_AT = 'createdAt',
+}
+
+export enum SortOrder {
+  ASC = 'asc',
+  DESC = 'desc',
+}
+
 export interface Expense {
   id: string;
   category: ExpenseCategory;
@@ -31,6 +41,59 @@ export interface Expense {
   description?: string;
 }
 
+/**
+ * Backend response structure for expense report
+ */
+export interface ExpenseReportResponse {
+  id: string;
+  userId: string;
+  title: string;
+  reportDate: string;
+  status: ExpenseReportStatus;
+  totalAmount: number;
+  currency: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  rejectionReason?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Paginated response metadata
+ */
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+/**
+ * Paginated expense reports response
+ */
+export interface PaginatedExpenseReports {
+  data: ExpenseReportResponse[];
+  meta: PaginationMeta;
+}
+
+/**
+ * Query parameters for fetching expense reports
+ */
+export interface QueryExpenseReportsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: ExpenseReportStatus;
+  minAmount?: number;
+  maxAmount?: number;
+  sortBy?: SortBy;
+  order?: SortOrder;
+}
+
+/**
+ * Full expense report with expenses
+ */
 export interface ExpenseReport {
   id: string;
   title: string;
@@ -42,6 +105,9 @@ export interface ExpenseReport {
   updatedAt: string;
 }
 
+/**
+ * Simplified expense report for list display
+ */
 export interface ExpenseReportListItem {
   id: string;
   title: string;
