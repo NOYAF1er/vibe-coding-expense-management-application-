@@ -40,7 +40,10 @@ export const ExpenseReportsPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [filterChips, setFilterChips] = useState<Array<{ id: string; label: string }>>([]);
+  const [filterChips, setFilterChips] = useState<Array<{ id: string; label: string }>>([
+    { id: 'status-submitted', label: 'Status: Submitted' },
+    { id: 'amount-high-low', label: 'Amount: High to Low' },
+  ]);
 
   // Debounce search query to avoid too many API calls
   useEffect(() => {
@@ -102,13 +105,12 @@ export const ExpenseReportsPage: React.FC = () => {
         <div className="p-4 space-y-4">
           <SearchInput value={searchQuery} onChange={setSearchQuery} />
 
-          <div className="flex items-center space-x-2">
+          <div className="space-y-3">
             <FilterButton onClick={handleFilterClick} />
+            {filterChips.length > 0 && (
+              <FilterChips chips={filterChips} onRemove={handleRemoveChip} />
+            )}
           </div>
-
-          {filterChips.length > 0 && (
-            <FilterChips chips={filterChips} onRemove={handleRemoveChip} />
-          )}
         </div>
 
         <div className="px-4 space-y-4">
@@ -134,11 +136,6 @@ export const ExpenseReportsPage: React.FC = () => {
 
           {!loading && !error && listItems.length > 0 && (
             <>
-              {meta && (
-                <div className="text-sm text-muted-light dark:text-muted-dark mb-2">
-                  Showing {listItems.length} of {meta.total} reports
-                </div>
-              )}
               {listItems.map((report) => (
                 <ExpenseReportCard
                   key={report.id}
