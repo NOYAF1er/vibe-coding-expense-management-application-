@@ -104,3 +104,31 @@ This file tracks the project's progress using a task list format.
 - [ ] Cascade deletes configured properly
 - [ ] No linting errors
 - [ ] API testable via Swagger UI
+
+---
+
+**2026-01-17 20:51:00** - Comprehensive Database Seed Script Completed
+
+## Completed Tasks (Updated)
+
+**2026-01-17 20:51:00** - Database Seeding Implementation
+- ✅ Replaced existing seed script with comprehensive data generation
+- ✅ Implemented complete database cleanup (using repository.clear())
+- ✅ Generated 7 ExpenseReports covering ALL statuses
+  - DRAFT, SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, PAID
+- ✅ Generated 22 Expenses covering ALL categories
+  - TRAVEL, MEAL, HOTEL, TRANSPORT, OFFICE_SUPPLIES, OTHER
+- ✅ Generated 22 Expenses covering ALL statuses
+  - SUBMITTED, REVIEWED, APPROVED, REJECTED
+- ✅ Created 3 users with different roles (EMPLOYEE, MANAGER, ADMIN)
+- ✅ Ensured strict business logic coherence between reports and expenses
+- ✅ Added realistic amounts and dates
+- ✅ Script tested and executed successfully
+- ✅ Total seeded data: 3022.00€ across all reports
+
+**Database Seeding Results**:
+- 3 Users (Employee, Manager, Admin)
+- 7 Expense Reports (all statuses covered)
+- 22 Expenses (all categories and statuses covered)
+- All data is coherent and realistic
+- Frontend can now test all badge variations and user scenarios

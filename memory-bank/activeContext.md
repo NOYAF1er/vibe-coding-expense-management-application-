@@ -84,6 +84,16 @@ The complete architecture for an expense management backend has been designed an
 
 ## Recent Changes
 
+**2026-01-17 20:51:00** - Database seed script completely overhauled
+- Replaced existing seed script with comprehensive data generation
+- Added complete database cleanup (all tables cleared before seeding)
+- Generated 7 ExpenseReports covering ALL statuses (DRAFT, SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, PAID)
+- Generated 22 Expenses covering ALL categories and ALL statuses
+- Ensured strict business logic coherence between reports and expenses
+- Created 3 users with different roles (EMPLOYEE, MANAGER, ADMIN)
+- Total seeded data: 3022.00€ across all reports
+- Seed script successfully tested and verified
+
 **2026-01-14 09:49:00** - Expense Management System architecture completed
 - Analyzed proposed data structure
 - Identified 10 critical issues and improvements
