@@ -1,5 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { ExpenseStatus, ExpenseCategory } from '../types/expense-report.types';
+import { useState, useEffect } from 'react';
+import { ExpenseStatus, ExpenseCategory, Expense } from '../types/expense-report.types';
+import { expensesService } from '../services/expenses.service';
 
 /**
  * Expense Details Page
@@ -8,32 +10,85 @@ import { ExpenseStatus, ExpenseCategory } from '../types/expense-report.types';
 export function ExpenseDetailsPage() {
   const navigate = useNavigate();
   const { reportId, expenseId } = useParams<{ reportId: string; expenseId: string }>();
+  const [expense, setExpense] = useState<Expense | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data - replace with actual API call
-  const expense = {
-    id: expenseId || '1',
-    amount: 125.00,
-    category: ExpenseCategory.TRAVEL,
-    description: 'Round-trip train ticket to the conference',
-    date: 'July 15, 2024',
-    status: ExpenseStatus.APPROVED,
-    history: [
-      {
-        status: 'Approved',
-        date: 'July 16, 2024',
-        icon: 'check',
-      },
-      {
-        status: 'Reviewed',
-        date: 'July 15, 2024',
-        icon: 'search',
-      },
+  useEffect(() => {
+    const fetchExpense = async () => {
+      if (!expenseId) {
+        setError('Expense ID is required');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const data = await expensesService.getById(expenseId);
+        setExpense(data);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load expense details');
+        console.error('Error fetching expense:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchExpense();
+  }, [expenseId]);
+
+  // Generate history timeline based on expense status
+  const getExpenseHistory = (expense: Expense) => {
+    const history = [
       {
         status: 'Submitted',
-        date: 'July 15, 2024',
+        date: new Date(expense.createdAt).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }),
         icon: 'send',
       },
-    ],
+    ];
+
+    if (expense.status === ExpenseStatus.REVIEWED || expense.status === ExpenseStatus.APPROVED || expense.status === ExpenseStatus.REJECTED) {
+      history.unshift({
+        status: 'Reviewed',
+        date: new Date(expense.updatedAt).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }),
+        icon: 'search',
+      });
+    }
+
+    if (expense.status === ExpenseStatus.APPROVED) {
+      history.unshift({
+        status: 'Approved',
+        date: new Date(expense.updatedAt).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }),
+        icon: 'check',
+      });
+    }
+
+    if (expense.status === ExpenseStatus.REJECTED) {
+      history.unshift({
+        status: 'Rejected',
+        date: new Date(expense.updatedAt).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }),
+        icon: 'x',
+      });
+    }
+
+    return history;
   };
 
   const getStatusStyles = (status: ExpenseStatus) => {
@@ -71,7 +126,7 @@ export function ExpenseDetailsPage() {
   const getHistoryIcon = (iconType: string, isActive: boolean) => {
     const iconClass = isActive
       ? 'relative h-8 w-8 flex items-center justify-center rounded-full bg-primary text-white'
-      : 'relative h-8 w-8 flex items-center justify-center rounded-full bg-subtle-light/30 dark:bg-subtle-dark/30 text-content-light dark:text-content-dark';
+      : 'relative h-8 w-8 flex items-center justify-center rounded-full bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300';
 
     switch (iconType) {
       case 'check':
@@ -107,6 +162,61 @@ export function ExpenseDetailsPage() {
     navigate(`/reports/${reportId}/edit-expense/${expenseId}`);
   };
 
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark font-display text-content-light dark:text-content-dark">
+        <header className="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm">
+          <div className="flex items-center p-4">
+            <button className="p-2 -ml-2" onClick={() => navigate(-1)}>
+              <svg className="text-content-light dark:text-content-dark" fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path>
+              </svg>
+            </button>
+            <h1 className="flex-1 text-lg font-bold text-center">Expense Details</h1>
+            <div className="w-8"></div>
+          </div>
+        </header>
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-subtle-light dark:text-subtle-dark">Loading...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error || !expense) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark font-display text-content-light dark:text-content-dark">
+        <header className="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm">
+          <div className="flex items-center p-4">
+            <button className="p-2 -ml-2" onClick={() => navigate(-1)}>
+              <svg className="text-content-light dark:text-content-dark" fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path>
+              </svg>
+            </button>
+            <h1 className="flex-1 text-lg font-bold text-center">Expense Details</h1>
+            <div className="w-8"></div>
+          </div>
+        </header>
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-500">{error || 'Expense not found'}</p>
+            <button
+              onClick={() => navigate(-1)}
+              className="mt-4 px-4 py-2 bg-primary text-white rounded-lg"
+            >
+              Go Back
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const history = getExpenseHistory(expense);
+
   return (
     <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark font-display text-content-light dark:text-content-dark">
       {/* Header */}
@@ -131,12 +241,18 @@ export function ExpenseDetailsPage() {
               <h2 className="text-2xl font-bold">${expense.amount.toFixed(2)}</h2>
               <p className="text-subtle-light dark:text-subtle-dark">{getCategoryLabel(expense.category)}</p>
             </div>
-            <div className={`px-3 py-1.5 rounded-full text-sm font-medium ${getStatusStyles(expense.status)}`}>
-              {expense.status}
+            <div className={`px-3 py-1.5 rounded-full text-sm font-medium ${getStatusStyles(expense.status || ExpenseStatus.SUBMITTED)}`}>
+              {expense.status || ExpenseStatus.SUBMITTED}
             </div>
           </div>
-          <p className="mt-2 text-content-light dark:text-content-dark">{expense.description}</p>
-          <p className="mt-1 text-sm text-subtle-light dark:text-subtle-dark">{expense.date}</p>
+          <p className="mt-2 text-content-light dark:text-content-dark">{expense.description || expense.name}</p>
+          <p className="mt-1 text-sm text-subtle-light dark:text-subtle-dark">
+            {new Date(expense.expenseDate).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}
+          </p>
         </section>
 
         {/* History Section */}
@@ -144,13 +260,13 @@ export function ExpenseDetailsPage() {
           <h3 className="text-lg font-bold mb-3 px-1">History</h3>
           <div className="flow-root">
             <ul className="-mb-8">
-              {expense.history.map((item, index) => (
+              {history.map((item, index) => (
                 <li key={index}>
-                  <div className={index !== expense.history.length - 1 ? 'relative pb-8' : 'relative'}>
-                    {index !== expense.history.length - 1 && (
+                  <div className={index !== history.length - 1 ? 'relative pb-8' : 'relative'}>
+                    {index !== history.length - 1 && (
                       <span
                         aria-hidden="true"
-                        className="absolute top-8 left-4 -ml-px h-full w-px bg-subtle-light/30 dark:bg-subtle-dark/30"
+                        className="absolute left-4 top-8 -ml-px h-full w-0.5 bg-gray-300 dark:bg-gray-600"
                       ></span>
                     )}
                     <div className="relative flex items-start space-x-3">

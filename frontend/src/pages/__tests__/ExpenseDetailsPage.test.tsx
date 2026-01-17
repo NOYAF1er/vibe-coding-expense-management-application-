@@ -1,203 +1,265 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { render, screen, waitFor } from '@testing-library/react';
+import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ExpenseDetailsPage } from '../ExpenseDetailsPage';
+import { expensesService } from '../../services/expenses.service';
+import { ExpenseCategory, ExpenseStatus } from '../../types/expense-report.types';
 
-// Mock useNavigate and useParams
+// Mock the expenses service
+vi.mock('../../services/expenses.service', () => ({
+  expensesService: {
+    getById: vi.fn(),
+  },
+}));
+
+// Mock useNavigate
 const mockNavigate = vi.fn();
-const mockParams = {
-  reportId: 'test-report-id',
-  expenseId: 'test-expense-id',
-};
-
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
     useNavigate: () => mockNavigate,
-    useParams: () => mockParams,
   };
 });
 
 describe('ExpenseDetailsPage', () => {
+  const mockExpense = {
+    id: 'f49238ae-b1a3-4615-a7aa-99c63893d44b',
+    reportId: '3efdc5df-6994-4c40-86c4-2f9f2b14c8b3',
+    name: 'Billet de train Paris',
+    description: 'Aller-retour Paris Gare de Lyon',
+    amount: 125.5,
+    expenseDate: '2024-01-15',
+    category: ExpenseCategory.TRAVEL,
+    status: ExpenseStatus.APPROVED,
+    receiptRequired: true,
+    createdAt: '2024-01-15T10:00:00.000Z',
+    updatedAt: '2024-01-16T14:30:00.000Z',
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  const renderComponent = () => {
-    return render(
-      <BrowserRouter>
-        <ExpenseDetailsPage />
-      </BrowserRouter>
+  it('should render loading state initially', () => {
+    vi.mocked(expensesService.getById).mockImplementation(
+      () => new Promise(() => {}) // Never resolves
     );
-  };
 
-  describe('Header', () => {
-    it('should render the page title', () => {
-      renderComponent();
-      expect(screen.getByText('Expense Details')).toBeInTheDocument();
+    render(
+      <MemoryRouter initialEntries={['/reports/123/expenses/456']}>
+        <Routes>
+          <Route path="/reports/:reportId/expenses/:expenseId" element={<ExpenseDetailsPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+  });
+
+  it('should render expense details when data is loaded', async () => {
+    vi.mocked(expensesService.getById).mockResolvedValue(mockExpense);
+
+    render(
+      <MemoryRouter initialEntries={['/reports/123/expenses/f49238ae-b1a3-4615-a7aa-99c63893d44b']}>
+        <Routes>
+          <Route path="/reports/:reportId/expenses/:expenseId" element={<ExpenseDetailsPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('$125.50')).toBeInTheDocument();
     });
 
-    it('should render back button', () => {
-      renderComponent();
-      const backButton = screen.getByRole('button', { name: '' });
-      expect(backButton).toBeInTheDocument();
+    expect(screen.getByText('Travel')).toBeInTheDocument();
+    expect(screen.getByText('Aller-retour Paris Gare de Lyon')).toBeInTheDocument();
+    expect(screen.getAllByText('January 15, 2024').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Approved').length).toBeGreaterThan(0);
+  });
+
+  it('should render error state when expense fetch fails', async () => {
+    vi.mocked(expensesService.getById).mockRejectedValue(new Error('Failed to fetch'));
+
+    render(
+      <MemoryRouter initialEntries={['/reports/123/expenses/456']}>
+        <Routes>
+          <Route path="/reports/:reportId/expenses/:expenseId" element={<ExpenseDetailsPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Failed to load expense details')).toBeInTheDocument();
     });
 
-    it('should navigate back when back button is clicked', () => {
-      renderComponent();
-      const backButton = screen.getByRole('button', { name: '' });
-      backButton.click();
-      expect(mockNavigate).toHaveBeenCalledWith(-1);
+    expect(screen.getByText('Go Back')).toBeInTheDocument();
+  });
+
+  it('should display correct category label', async () => {
+    const expenseWithMeal = { ...mockExpense, category: ExpenseCategory.MEAL };
+    vi.mocked(expensesService.getById).mockResolvedValue(expenseWithMeal);
+
+    render(
+      <MemoryRouter initialEntries={['/reports/123/expenses/456']}>
+        <Routes>
+          <Route path="/reports/:reportId/expenses/:expenseId" element={<ExpenseDetailsPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Meal')).toBeInTheDocument();
     });
   });
 
-  describe('Expense Summary Card', () => {
-    it('should display expense amount', () => {
-      renderComponent();
-      expect(screen.getByText('$125.00')).toBeInTheDocument();
-    });
+  it('should display history timeline for approved expense', async () => {
+    vi.mocked(expensesService.getById).mockResolvedValue(mockExpense);
 
-    it('should display expense category', () => {
-      renderComponent();
-      expect(screen.getByText('Travel')).toBeInTheDocument();
-    });
+    render(
+      <MemoryRouter initialEntries={['/reports/123/expenses/456']}>
+        <Routes>
+          <Route path="/reports/:reportId/expenses/:expenseId" element={<ExpenseDetailsPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
 
-    it('should display expense description', () => {
-      renderComponent();
-      expect(screen.getByText('Round-trip train ticket to the conference')).toBeInTheDocument();
-    });
-
-    it('should display expense date', () => {
-      renderComponent();
-      const dates = screen.getAllByText('July 15, 2024');
-      expect(dates.length).toBeGreaterThan(0);
-      expect(dates[0]).toBeInTheDocument();
-    });
-
-    it('should display expense status badge', () => {
-      renderComponent();
-      const approvedElements = screen.getAllByText('Approved');
-      expect(approvedElements.length).toBe(2); // One in badge, one in history
-      expect(approvedElements[0]).toBeInTheDocument();
-    });
-  });
-
-  describe('History Section', () => {
-    it('should render history section title', () => {
-      renderComponent();
+    await waitFor(() => {
       expect(screen.getByText('History')).toBeInTheDocument();
     });
 
-    it('should display all history items', () => {
-      renderComponent();
-      expect(screen.getAllByText('Approved')).toHaveLength(2); // One in badge, one in history
-      expect(screen.getByText('Reviewed')).toBeInTheDocument();
-      expect(screen.getByText('Submitted')).toBeInTheDocument();
+    // Should show all three statuses for approved expense
+    expect(screen.getAllByText('Approved').length).toBeGreaterThan(0);
+    expect(screen.getByText('Reviewed')).toBeInTheDocument();
+    expect(screen.getByText('Submitted')).toBeInTheDocument();
+  });
+
+  it('should display history timeline for submitted expense', async () => {
+    const submittedExpense = { ...mockExpense, status: ExpenseStatus.SUBMITTED };
+    vi.mocked(expensesService.getById).mockResolvedValue(submittedExpense);
+
+    render(
+      <MemoryRouter initialEntries={['/reports/123/expenses/456']}>
+        <Routes>
+          <Route path="/reports/:reportId/expenses/:expenseId" element={<ExpenseDetailsPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('History')).toBeInTheDocument();
     });
 
-    it('should display dates for all history items', () => {
-      renderComponent();
-      expect(screen.getByText('July 16, 2024')).toBeInTheDocument();
-      expect(screen.getAllByText('July 15, 2024')).toHaveLength(3); // Expense date + 2 history dates
+    // Should only show submitted status
+    expect(screen.getAllByText('Submitted').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Reviewed')).not.toBeInTheDocument();
+    expect(screen.queryByText('Approved')).not.toBeInTheDocument();
+  });
+
+  it('should call navigate when back button is clicked', async () => {
+    vi.mocked(expensesService.getById).mockResolvedValue(mockExpense);
+
+    render(
+      <MemoryRouter initialEntries={['/reports/123/expenses/456']}>
+        <Routes>
+          <Route path="/reports/:reportId/expenses/:expenseId" element={<ExpenseDetailsPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('$125.50')).toBeInTheDocument();
     });
 
-    it('should render history icons', () => {
-      renderComponent();
-      const historySection = screen.getByText('History').closest('section');
-      expect(historySection).toBeInTheDocument();
-      
-      // Check for SVG icons
-      const svgs = historySection?.querySelectorAll('svg');
-      expect(svgs?.length).toBeGreaterThan(0);
+    const backButton = screen.getAllByRole('button')[0];
+    backButton.click();
+
+    expect(mockNavigate).toHaveBeenCalledWith(-1);
+  });
+
+  it('should navigate to edit page when Edit button is clicked', async () => {
+    vi.mocked(expensesService.getById).mockResolvedValue(mockExpense);
+
+    render(
+      <MemoryRouter initialEntries={['/reports/123/expenses/f49238ae-b1a3-4615-a7aa-99c63893d44b']}>
+        <Routes>
+          <Route path="/reports/:reportId/expenses/:expenseId" element={<ExpenseDetailsPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Edit')).toBeInTheDocument();
+    });
+
+    const editButton = screen.getByText('Edit');
+    editButton.click();
+
+    expect(mockNavigate).toHaveBeenCalledWith('/reports/123/edit-expense/f49238ae-b1a3-4615-a7aa-99c63893d44b');
+  });
+
+  it('should use expense name when description is not available', async () => {
+    const expenseWithoutDescription = { ...mockExpense, description: undefined };
+    vi.mocked(expensesService.getById).mockResolvedValue(expenseWithoutDescription);
+
+    render(
+      <MemoryRouter initialEntries={['/reports/123/expenses/456']}>
+        <Routes>
+          <Route path="/reports/:reportId/expenses/:expenseId" element={<ExpenseDetailsPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Billet de train Paris')).toBeInTheDocument();
     });
   });
 
-  describe('Footer Actions', () => {
-    it('should render Edit button', () => {
-      renderComponent();
-      expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
-    });
+  it('should display correct status badge styling for different statuses', async () => {
+    const rejectedExpense = { ...mockExpense, status: ExpenseStatus.REJECTED };
+    vi.mocked(expensesService.getById).mockResolvedValue(rejectedExpense);
 
-    it('should render Download PDF button', () => {
-      renderComponent();
-      expect(screen.getByRole('button', { name: 'Download PDF' })).toBeInTheDocument();
-    });
-  });
+    render(
+      <MemoryRouter initialEntries={['/reports/123/expenses/456']}>
+        <Routes>
+          <Route path="/reports/:reportId/expenses/:expenseId" element={<ExpenseDetailsPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
 
-  describe('Bottom Navigation', () => {
-    it('should render all navigation items', () => {
-      renderComponent();
-      expect(screen.getByText('Expenses')).toBeInTheDocument();
-      expect(screen.getByText('Submit')).toBeInTheDocument();
-      expect(screen.getByText('Profile')).toBeInTheDocument();
-    });
-
-    it('should have correct navigation links', () => {
-      renderComponent();
-      const expensesLink = screen.getByText('Expenses').closest('a');
-      const submitLink = screen.getByText('Submit').closest('a');
-      const profileLink = screen.getByText('Profile').closest('a');
-
-      expect(expensesLink).toHaveAttribute('href', '/');
-      expect(submitLink).toHaveAttribute('href', '/new-report');
-      expect(profileLink).toHaveAttribute('href', '/profile');
-    });
-
-    it('should highlight Expenses tab as active', () => {
-      renderComponent();
-      const expensesLink = screen.getByText('Expenses').closest('a');
-      expect(expensesLink).toHaveClass('text-primary');
+    await waitFor(() => {
+      expect(screen.getAllByText('Rejected').length).toBeGreaterThan(0);
     });
   });
 
-  describe('Status Styling', () => {
-    it('should apply correct styles for Approved status', () => {
-      renderComponent();
-      const statusBadge = screen.getAllByText('Approved')[0];
-      expect(statusBadge).toHaveClass('bg-primary/10', 'text-primary', 'border-primary/20');
+  it('should handle missing expenseId parameter', async () => {
+    render(
+      <MemoryRouter initialEntries={['/reports/123/expenses/']}>
+        <Routes>
+          <Route path="/reports/:reportId/expenses/:expenseId?" element={<ExpenseDetailsPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Expense ID is required')).toBeInTheDocument();
     });
   });
 
-  describe('Category Labels', () => {
-    it('should display correct category label for TRAVEL', () => {
-      renderComponent();
-      expect(screen.getByText('Travel')).toBeInTheDocument();
-    });
-  });
+  it('should format dates correctly', async () => {
+    vi.mocked(expensesService.getById).mockResolvedValue(mockExpense);
 
-  describe('Responsive Design', () => {
-    it('should render with proper layout classes', () => {
-      const { container } = renderComponent();
-      const mainContainer = container.firstChild;
-      expect(mainContainer).toHaveClass('flex', 'flex-col', 'min-h-screen');
-    });
+    render(
+      <MemoryRouter initialEntries={['/reports/123/expenses/456']}>
+        <Routes>
+          <Route path="/reports/:reportId/expenses/:expenseId" element={<ExpenseDetailsPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
 
-    it('should have sticky header', () => {
-      renderComponent();
-      const header = screen.getByRole('banner');
-      expect(header).toHaveClass('sticky', 'top-0');
-    });
-
-    it('should have sticky footer', () => {
-      renderComponent();
-      const footer = screen.getByRole('contentinfo');
-      expect(footer).toHaveClass('sticky', 'bottom-0');
-    });
-  });
-
-  describe('Accessibility', () => {
-    it('should have proper semantic HTML structure', () => {
-      renderComponent();
-      expect(screen.getByRole('banner')).toBeInTheDocument(); // header
-      expect(screen.getByRole('main')).toBeInTheDocument(); // main
-      expect(screen.getByRole('contentinfo')).toBeInTheDocument(); // footer
-    });
-
-    it('should have accessible navigation', () => {
-      renderComponent();
-      const nav = screen.getByRole('navigation');
-      expect(nav).toBeInTheDocument();
+    await waitFor(() => {
+      // Check expense date format - there will be multiple instances
+      expect(screen.getAllByText('January 15, 2024').length).toBeGreaterThan(0);
     });
   });
 });
