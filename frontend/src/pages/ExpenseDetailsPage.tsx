@@ -94,15 +94,15 @@ export function ExpenseDetailsPage() {
   const getStatusStyles = (status: ExpenseStatus) => {
     switch (status) {
       case ExpenseStatus.APPROVED:
-        return 'bg-primary/10 text-primary border border-primary/20';
+        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
       case ExpenseStatus.REJECTED:
-        return 'bg-red-500/10 text-red-500 border border-red-500/20';
+        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
       case ExpenseStatus.REVIEWED:
-        return 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20';
+        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
       case ExpenseStatus.SUBMITTED:
-        return 'bg-blue-500/10 text-blue-500 border border-blue-500/20';
+        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
       default:
-        return 'bg-subtle-light/10 text-subtle-light border border-subtle-light/20';
+        return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400';
     }
   };
 
@@ -239,14 +239,14 @@ export function ExpenseDetailsPage() {
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-2xl font-bold">${expense.amount.toFixed(2)}</h2>
-              <p className="text-subtle-light dark:text-subtle-dark">{getCategoryLabel(expense.category)}</p>
+              <p className="text-gray-600 dark:text-gray-400">{getCategoryLabel(expense.category)}</p>
             </div>
             <div className={`px-3 py-1.5 rounded-full text-sm font-medium ${getStatusStyles(expense.status || ExpenseStatus.SUBMITTED)}`}>
               {expense.status || ExpenseStatus.SUBMITTED}
             </div>
           </div>
           <p className="mt-2 text-content-light dark:text-content-dark">{expense.description || expense.name}</p>
-          <p className="mt-1 text-sm text-subtle-light dark:text-subtle-dark">
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
             {new Date(expense.expenseDate).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'long',
@@ -276,7 +276,7 @@ export function ExpenseDetailsPage() {
                       <div className="min-w-0 flex-1">
                         <div>
                           <p className="font-medium text-content-light dark:text-content-dark">{item.status}</p>
-                          <p className="mt-0.5 text-sm text-subtle-light dark:text-subtle-dark">{item.date}</p>
+                          <p className="mt-0.5 text-sm text-gray-600 dark:text-gray-400">{item.date}</p>
                         </div>
                       </div>
                     </div>
