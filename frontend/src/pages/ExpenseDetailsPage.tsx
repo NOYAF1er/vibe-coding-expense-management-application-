@@ -38,11 +38,6 @@ export function ExpenseDetailsPage() {
     fetchExpense();
   }, [expenseId]);
 
-  // Format status for display (convert from UPPERCASE to Capitalized)
-  const formatStatusForDisplay = (status: ExpenseStatus): string => {
-    return status.charAt(0) + status.slice(1).toLowerCase();
-  };
-
   // Generate history timeline based on expense status
   const getExpenseHistory = (expense: Expense) => {
     const history = [
@@ -247,7 +242,7 @@ export function ExpenseDetailsPage() {
               <p className="text-gray-500 dark:text-gray-400">{getCategoryLabel(expense.category)}</p>
             </div>
             <div className={`px-3 py-1.5 rounded-full text-sm font-medium ${getStatusStyles(expense.status || ExpenseStatus.SUBMITTED)}`}>
-              {formatStatusForDisplay(expense.status || ExpenseStatus.SUBMITTED)}
+              {expense.status || ExpenseStatus.SUBMITTED}
             </div>
           </div>
           <p className="mt-2 text-content-light dark:text-content-dark">{expense.description || expense.name}</p>

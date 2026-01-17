@@ -47,25 +47,6 @@ const getStatusBadgeClasses = (status: ExpenseStatus): string => {
 };
 
 /**
- * Assign status to expenses based on report status
- */
-const assignExpenseStatus = (expenses: Expense[], reportStatus: string): Expense[] => {
-  return expenses.map((expense, index) => {
-    // Mock status assignment for demo purposes
-    // In real app, this would come from backend
-    let status: ExpenseStatus;
-    if (index === 0) {
-      status = ExpenseStatus.SUBMITTED;
-    } else if (index === 2) {
-      status = ExpenseStatus.REJECTED;
-    } else {
-      status = ExpenseStatus.APPROVED;
-    }
-    return { ...expense, status };
-  });
-};
-
-/**
  * Format date to MM/DD/YYYY
  */
 const formatDate = (dateString: string): string => {
@@ -104,8 +85,7 @@ export function ExpenseReportDetailsPage() {
 
         // Fetch expenses for this report
         const expensesData = await expensesService.getByReportId(id);
-        const expensesWithStatus = assignExpenseStatus(expensesData, reportData.status);
-        setExpenses(expensesWithStatus);
+        setExpenses(expensesData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load report details');
       } finally {
