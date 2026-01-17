@@ -126,13 +126,29 @@ export class ExpenseReportsService {
   }
 
   /**
-   * Calculate total amount from expenses (will be implemented after Expense entity)
+   * Calculate total amount from expenses, excluding REJECTED expenses
    */
   async calculateTotal(id: string): Promise<number> {
-    const report = await this.findOne(id);
-    // For now, return the current total
-    // This will be updated once Expense entity is created
-    return Number(report.totalAmount);
+    const result = await this.expenseRepository
+      .createQueryBuilder('expense')
+      .select('COALESCE(SUM(expense.amount), 0)', 'total')
+      .where('expense.reportId = :id', { id })
+      .andWhere('expense.status != :rejectedStatus', {
+        rejectedStatus: ExpenseStatus.REJECTED
+      })
+      .getRawOne();
+    
+    return Number(result.total);
+  }
+
+  /**
+   * Recalculate and update the total amount for a report
+   */
+  async recalculateTotalAmount(reportId: string): Promise<ExpenseReport> {
+    const newTotal = await this.calculateTotal(reportId);
+    const report = await this.findOne(reportId);
+    report.totalAmount = newTotal;
+    return this.reportRepository.save(report);
   }
 
   /**

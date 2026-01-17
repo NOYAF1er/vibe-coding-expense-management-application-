@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Expense } from './entities/expense.entity';
 import { CreateExpenseDto, UpdateExpenseDto } from './dto/expense.dto';
+import { ExpenseReportsService } from '../expense-reports/expense-reports.service';
 
 /**
  * Service for managing expenses
@@ -12,11 +13,20 @@ export class ExpensesService {
   constructor(
     @InjectRepository(Expense)
     private readonly expenseRepository: Repository<Expense>,
+    @Inject(forwardRef(() => ExpenseReportsService))
+    private readonly expenseReportsService: ExpenseReportsService,
   ) {}
 
   async create(createDto: CreateExpenseDto): Promise<Expense> {
     const expense = this.expenseRepository.create(createDto);
-    return this.expenseRepository.save(expense);
+    const savedExpense = await this.expenseRepository.save(expense);
+    
+    // Recalculate report total amount
+    if (this.expenseReportsService) {
+      await this.expenseReportsService.recalculateTotalAmount(savedExpense.reportId);
+    }
+    
+    return savedExpense;
   }
 
   async findAll(): Promise<Expense[]> {
@@ -40,12 +50,26 @@ export class ExpensesService {
 
   async update(id: string, updateDto: UpdateExpenseDto): Promise<Expense> {
     const expense = await this.findOne(id);
+    const reportId = expense.reportId;
     Object.assign(expense, updateDto);
-    return this.expenseRepository.save(expense);
+    const updatedExpense = await this.expenseRepository.save(expense);
+    
+    // Recalculate report total amount (status or amount may have changed)
+    if (this.expenseReportsService) {
+      await this.expenseReportsService.recalculateTotalAmount(reportId);
+    }
+    
+    return updatedExpense;
   }
 
   async remove(id: string): Promise<void> {
     const expense = await this.findOne(id);
+    const reportId = expense.reportId;
     await this.expenseRepository.remove(expense);
+    
+    // Recalculate report total amount
+    if (this.expenseReportsService) {
+      await this.expenseReportsService.recalculateTotalAmount(reportId);
+    }
   }
 }
