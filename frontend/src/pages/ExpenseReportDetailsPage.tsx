@@ -246,7 +246,7 @@ export function ExpenseReportDetailsPage() {
               </div>
               <button
                 onClick={handleTitleEdit}
-                className="p-1 text-subtle-light dark:text-subtle-dark hover:text-primary dark:hover:text-primary transition-colors"
+                className="p-1 text-gray-400 dark:text-subtle-dark hover:text-primary dark:hover:text-primary transition-colors"
               >
                 <span className="material-symbols-outlined text-base">edit</span>
               </button>
@@ -262,7 +262,7 @@ export function ExpenseReportDetailsPage() {
               <div
                 key={expense.id}
                 onClick={() => handleViewExpenseDetails(expense.id)}
-                className="bg-surface-light dark:bg-surface-dark rounded-lg p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="bg-white dark:bg-surface-dark rounded-lg p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
                 <div className="flex items-center gap-4">
                   {/* Category Icon */}
@@ -277,7 +277,7 @@ export function ExpenseReportDetailsPage() {
                     <p className="font-semibold text-content-light dark:text-content-dark">
                       {expense.name}
                     </p>
-                    <p className="text-sm text-subtle-light dark:text-subtle-dark">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       ${expense.amount.toFixed(2)}
                     </p>
                   </div>
