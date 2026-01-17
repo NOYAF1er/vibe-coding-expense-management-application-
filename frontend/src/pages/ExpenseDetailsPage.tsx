@@ -308,13 +308,13 @@ export function ExpenseDetailsPage() {
             </svg>
             <span className="text-xs font-medium">Expenses</span>
           </a>
-          <a className="flex flex-col items-center gap-1 text-subtle-light dark:text-subtle-dark" href="/new-report">
+          <a className="flex flex-col items-center gap-1 text-gray-500" href="/new-report">
             <svg fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
               <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"></path>
             </svg>
             <span className="text-xs font-medium">Submit</span>
           </a>
-          <a className="flex flex-col items-center gap-1 text-subtle-light dark:text-subtle-dark" href="/profile">
+          <a className="flex flex-col items-center gap-1 text-gray-500" href="/profile">
             <svg fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
               <path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"></path>
             </svg>
