@@ -2,6 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { ExpenseStatus, ExpenseCategory, Expense } from '../types/expense-report.types';
 import { expensesService } from '../services/expenses.service';
+import { StatusBadge } from '../components/StatusBadge';
 
 /**
  * Expense Details Page
@@ -89,21 +90,6 @@ export function ExpenseDetailsPage() {
     }
 
     return history;
-  };
-
-  const getStatusStyles = (status: ExpenseStatus) => {
-    switch (status) {
-      case ExpenseStatus.APPROVED:
-        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-      case ExpenseStatus.REJECTED:
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-      case ExpenseStatus.REVIEWED:
-        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
-      case ExpenseStatus.SUBMITTED:
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-      default:
-        return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400';
-    }
   };
 
   const getCategoryLabel = (category: ExpenseCategory) => {
@@ -241,9 +227,7 @@ export function ExpenseDetailsPage() {
               <h2 className="text-2xl font-bold">${expense.amount.toFixed(2)}</h2>
               <p className="text-gray-500 dark:text-gray-400">{getCategoryLabel(expense.category)}</p>
             </div>
-            <div className={`px-3 py-1.5 rounded-full text-sm font-medium ${getStatusStyles(expense.status || ExpenseStatus.SUBMITTED)}`}>
-              {expense.status || ExpenseStatus.SUBMITTED}
-            </div>
+            <StatusBadge status={expense.status || ExpenseStatus.SUBMITTED} className="px-3 py-1.5 text-sm" />
           </div>
           <p className="mt-2 text-content-light dark:text-content-dark">{expense.description || expense.name}</p>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
