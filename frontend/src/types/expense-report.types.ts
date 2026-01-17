@@ -39,12 +39,13 @@ export enum SortOrder {
 
 /**
  * Expense status for individual expenses
+ * Matches backend enum values
  */
 export enum ExpenseStatus {
-  SUBMITTED = 'Submitted',
-  REVIEWED = 'Reviewed',
-  APPROVED = 'Approved',
-  REJECTED = 'Rejected',
+  SUBMITTED = 'SUBMITTED',
+  REVIEWED = 'REVIEWED',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
 }
 
 export interface Expense {

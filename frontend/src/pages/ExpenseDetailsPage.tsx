@@ -38,6 +38,11 @@ export function ExpenseDetailsPage() {
     fetchExpense();
   }, [expenseId]);
 
+  // Format status for display (convert from UPPERCASE to Capitalized)
+  const formatStatusForDisplay = (status: ExpenseStatus): string => {
+    return status.charAt(0) + status.slice(1).toLowerCase();
+  };
+
   // Generate history timeline based on expense status
   const getExpenseHistory = (expense: Expense) => {
     const history = [
@@ -239,14 +244,14 @@ export function ExpenseDetailsPage() {
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-2xl font-bold">${expense.amount.toFixed(2)}</h2>
-              <p className="text-gray-600 dark:text-gray-400">{getCategoryLabel(expense.category)}</p>
+              <p className="text-gray-500 dark:text-gray-400">{getCategoryLabel(expense.category)}</p>
             </div>
             <div className={`px-3 py-1.5 rounded-full text-sm font-medium ${getStatusStyles(expense.status || ExpenseStatus.SUBMITTED)}`}>
-              {expense.status || ExpenseStatus.SUBMITTED}
+              {formatStatusForDisplay(expense.status || ExpenseStatus.SUBMITTED)}
             </div>
           </div>
           <p className="mt-2 text-content-light dark:text-content-dark">{expense.description || expense.name}</p>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {new Date(expense.expenseDate).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'long',
@@ -276,7 +281,7 @@ export function ExpenseDetailsPage() {
                       <div className="min-w-0 flex-1">
                         <div>
                           <p className="font-medium text-content-light dark:text-content-dark">{item.status}</p>
-                          <p className="mt-0.5 text-sm text-gray-600 dark:text-gray-400">{item.date}</p>
+                          <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{item.date}</p>
                         </div>
                       </div>
                     </div>
