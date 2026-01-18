@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface DateInputProps {
   id: string;
   label: string;

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AddExpensePage } from '../AddExpensePage';
 import { expensesService } from '../../services/expenses.service';
 import { ExpenseCategory } from '../../types/expense-report.types';

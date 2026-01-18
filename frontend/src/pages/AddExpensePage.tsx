@@ -143,15 +143,6 @@ export function AddExpensePage() {
     }
   };
 
-  const formatExpenseDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-background-light dark:bg-background-dark">
