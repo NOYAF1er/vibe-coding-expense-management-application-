@@ -1,13 +1,22 @@
 interface SuccessModalProps {
   isOpen: boolean;
   onClose: () => void;
+  title?: string;
+  message?: string;
+  buttonLabel?: string;
 }
 
 /**
  * Success Modal Component
- * Displays a confirmation modal after successful expense report creation
+ * Reusable success confirmation modal for expense reports and expenses
  */
-export function SuccessModal({ isOpen, onClose }: SuccessModalProps) {
+export function SuccessModal({
+  isOpen,
+  onClose,
+  title = 'Submitted Successfully',
+  message = 'Your expense report has been created and is now pending review.',
+  buttonLabel = 'Done'
+}: SuccessModalProps) {
   if (!isOpen) {
     return null;
   }
@@ -35,12 +44,12 @@ export function SuccessModal({ isOpen, onClose }: SuccessModalProps) {
 
         {/* Title */}
         <h2 className="text-2xl font-bold text-text-light dark:text-text-dark mb-2">
-          Submitted Successfully
+          {title}
         </h2>
 
         {/* Description */}
         <p className="text-text-light/80 dark:text-text-dark/80 mb-8">
-          Your expense report has been created and is now pending review.
+          {message}
         </p>
 
         {/* Done Button */}
@@ -48,7 +57,7 @@ export function SuccessModal({ isOpen, onClose }: SuccessModalProps) {
           onClick={onClose}
           className="w-full bg-primary text-white font-bold h-14 rounded-lg flex items-center justify-center transition-opacity hover:opacity-90"
         >
-          Done
+          {buttonLabel}
         </button>
       </div>
     </div>

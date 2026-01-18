@@ -9,6 +9,22 @@ import { ExpenseCategory } from '../../types/expense-report.types';
 vi.mock('../../services/expenses.service', () => ({
   expensesService: {
     create: vi.fn(),
+    update: vi.fn(),
+    getById: vi.fn(),
+  },
+}));
+
+// Mock SuccessModal
+vi.mock('../../components/SuccessModal', () => ({
+  SuccessModal: ({ isOpen, onClose, title, message }: any) => {
+    if (!isOpen) return null;
+    return (
+      <div data-testid="success-modal">
+        <h2>{title}</h2>
+        <p>{message}</p>
+        <button onClick={onClose}>Done</button>
+      </div>
+    );
   },
 }));
 
@@ -288,7 +304,18 @@ describe('AddExpensePage', () => {
         });
       });
       
-      expect(mockNavigate).toHaveBeenCalledWith('/reports/test-report-id');
+      // Should show success modal instead of navigating immediately
+      await waitFor(() => {
+        expect(screen.getByTestId('success-modal')).toBeInTheDocument();
+      });
+      
+      // Click Done button to navigate
+      const doneButton = screen.getByRole('button', { name: 'Done' });
+      fireEvent.click(doneButton);
+      
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/reports/test-report-id');
+      });
     });
 
     it('should submit form with all fields filled', async () => {
@@ -340,7 +367,18 @@ describe('AddExpensePage', () => {
         });
       });
       
-      expect(mockNavigate).toHaveBeenCalledWith('/reports/test-report-id');
+      // Should show success modal
+      await waitFor(() => {
+        expect(screen.getByTestId('success-modal')).toBeInTheDocument();
+      });
+      
+      // Click Done button to navigate
+      const doneButton = screen.getByRole('button', { name: 'Done' });
+      fireEvent.click(doneButton);
+      
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/reports/test-report-id');
+      });
     });
 
     it('should show loading state during submission', async () => {
@@ -507,6 +545,98 @@ describe('AddExpensePage', () => {
       // Clear files
       fireEvent.change(fileInput, { target: { files: [] } });
       expect(screen.queryByText('1 file selected')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Success Modal Integration', () => {
+    it('should show success modal after creating expense', async () => {
+      const mockExpense = {
+        id: 'expense-123',
+        reportId: 'test-report-id',
+        category: ExpenseCategory.TRAVEL,
+        amount: 100,
+        name: 'Travel Expense',
+        expenseDate: '2024-10-24',
+        receiptRequired: true,
+        createdAt: '2024-10-24T00:00:00Z',
+        updatedAt: '2024-10-24T00:00:00Z',
+      };
+
+      vi.mocked(expensesService.create).mockResolvedValue(mockExpense);
+
+      renderComponent();
+      
+      const amountInput = screen.getByPlaceholderText('0.00');
+      fireEvent.change(amountInput, { target: { value: '100' } });
+      
+      const saveButton = screen.getByRole('button', { name: /Save/i });
+      fireEvent.click(saveButton);
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('success-modal')).toBeInTheDocument();
+      });
+      
+      expect(screen.getByText('Created Successfully')).toBeInTheDocument();
+      expect(screen.getByText('Your expense has been created successfully.')).toBeInTheDocument();
+    });
+
+    it('should navigate to report details after clicking Done on creation modal', async () => {
+      const mockExpense = {
+        id: 'expense-123',
+        reportId: 'test-report-id',
+        category: ExpenseCategory.TRAVEL,
+        amount: 100,
+        name: 'Travel Expense',
+        expenseDate: '2024-10-24',
+        receiptRequired: true,
+        createdAt: '2024-10-24T00:00:00Z',
+        updatedAt: '2024-10-24T00:00:00Z',
+      };
+
+      vi.mocked(expensesService.create).mockResolvedValue(mockExpense);
+
+      renderComponent();
+      
+      const amountInput = screen.getByPlaceholderText('0.00');
+      fireEvent.change(amountInput, { target: { value: '100' } });
+      
+      const saveButton = screen.getByRole('button', { name: /Save/i });
+      fireEvent.click(saveButton);
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('success-modal')).toBeInTheDocument();
+      });
+      
+      const doneButton = screen.getByRole('button', { name: 'Done' });
+      fireEvent.click(doneButton);
+      
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/reports/test-report-id');
+      });
+    });
+
+    it('should not show success modal on error', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      
+      vi.mocked(expensesService.create).mockRejectedValue(new Error('Network error'));
+
+      renderComponent();
+      
+      const amountInput = screen.getByPlaceholderText('0.00');
+      fireEvent.change(amountInput, { target: { value: '100' } });
+      
+      const saveButton = screen.getByRole('button', { name: /Save/i });
+      fireEvent.click(saveButton);
+      
+      await waitFor(() => {
+        expect(alertSpy).toHaveBeenCalled();
+      });
+      
+      expect(screen.queryByTestId('success-modal')).not.toBeInTheDocument();
+      
+      consoleErrorSpy.mockRestore();
+      alertSpy.mockRestore();
     });
   });
 });

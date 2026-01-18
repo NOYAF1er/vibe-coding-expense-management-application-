@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { expensesService } from '../services/expenses.service';
 import { ExpenseCategory } from '../types/expense-report.types';
+import { SuccessModal } from '../components/SuccessModal';
 
 /**
  * AddExpensePage Component
@@ -20,6 +21,8 @@ export function AddExpensePage() {
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [savedExpenseId, setSavedExpenseId] = useState<string | null>(null);
 
   // Load expense data if editing
   useEffect(() => {
@@ -90,6 +93,8 @@ export function AddExpensePage() {
 
     setIsSubmitting(true);
     try {
+      let responseExpenseId: string;
+      
       if (expenseId) {
         // Update existing expense
         await expensesService.update(expenseId, {
@@ -99,9 +104,10 @@ export function AddExpensePage() {
           description: description || undefined,
           expenseDate,
         });
+        responseExpenseId = expenseId;
       } else {
         // Create new expense
-        await expensesService.create({
+        const newExpense = await expensesService.create({
           reportId,
           category,
           amount: parseFloat(amount),
@@ -109,15 +115,30 @@ export function AddExpensePage() {
           description: description || undefined,
           expenseDate,
         });
+        responseExpenseId = newExpense.id;
       }
       
-      // Navigate back to report details
-      navigate(`/reports/${reportId}`);
+      // Show success modal
+      setSavedExpenseId(responseExpenseId);
+      setShowSuccessModal(true);
     } catch (error) {
       console.error(`Failed to ${expenseId ? 'update' : 'create'} expense:`, error);
       alert(`Failed to ${expenseId ? 'update' : 'create'} expense. Please try again.`);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleModalClose = () => {
+    setShowSuccessModal(false);
+    if (reportId) {
+      if (expenseId) {
+        // After update: Navigate to expense details page
+        navigate(`/reports/${reportId}/expenses/${savedExpenseId}`);
+      } else {
+        // After creation: Navigate to expense report details page
+        navigate(`/reports/${reportId}`);
+      }
     }
   };
 
@@ -327,6 +348,17 @@ export function AddExpensePage() {
           </button>
         </div>
       </footer>
+      
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={handleModalClose}
+        title={expenseId ? "Updated Successfully" : "Created Successfully"}
+        message={expenseId
+          ? "Your expense has been updated successfully."
+          : "Your expense has been created successfully."}
+        buttonLabel="Done"
+      />
     </div>
   );
 }
