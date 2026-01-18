@@ -34,20 +34,23 @@ describe('expenseReports.api', () => {
 
       const result = await createExpenseReport(payload);
 
+      const fetchCall = (global.fetch as any).mock.calls[0];
+      const requestBody = JSON.parse(fetchCall[1].body);
+
       expect(global.fetch).toHaveBeenCalledWith(
         'http://localhost:3000/api/v1/expense-reports',
-        {
+        expect.objectContaining({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            userId: '46535c2f-b439-45f5-b707-fefb90b66304',
-            title: 'Test Report',
-            reportDate: '2026-01-15',
-          }),
-        }
+        })
       );
+
+      expect(requestBody.userId).toBe('6de5bed6-d35b-4f8a-9235-0dfd2a1ed99b');
+      expect(requestBody.title).toBe('Test Report');
+      // Verify that reportDate is converted to ISO string format
+      expect(requestBody.reportDate).toBe(new Date('2026-01-15').toISOString());
 
       expect(result).toEqual(mockResponse);
     });
@@ -95,9 +98,10 @@ describe('expenseReports.api', () => {
       const requestBody = JSON.parse(fetchCall[1].body);
 
       expect(requestBody).toHaveProperty('userId');
-      expect(requestBody.userId).toBe('46535c2f-b439-45f5-b707-fefb90b66304');
+      expect(requestBody.userId).toBe('6de5bed6-d35b-4f8a-9235-0dfd2a1ed99b');
       expect(requestBody.title).toBe('Test Report');
-      expect(requestBody.reportDate).toBe('2026-01-15');
+      // Verify that reportDate is converted to ISO string format
+      expect(requestBody.reportDate).toBe(new Date('2026-01-15').toISOString());
     });
 
     it('should use correct API endpoint', async () => {

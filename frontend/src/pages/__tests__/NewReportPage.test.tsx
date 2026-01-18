@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { NewReportPage } from '../NewReportPage';
 import * as expenseReportsApi from '../../services/expenseReports.api';
+import { ExpenseReportStatus } from '../../types/expense-report.types';
 
 // Mock the API
 vi.mock('../../services/expenseReports.api');
@@ -60,13 +61,15 @@ describe('NewReportPage', () => {
     expect(createButton).not.toBeDisabled();
   });
 
-  it('should call API and navigate on successful form submission', async () => {
+  it('should call API and show success modal on successful form submission', async () => {
     const mockResponse = {
       id: '123',
+      userId: '6de5bed6-d35b-4f8a-9235-0dfd2a1ed99b',
       title: 'Test Report',
       reportDate: '2026-01-15',
       totalAmount: 0,
-      status: 'DRAFT',
+      currency: 'EUR',
+      status: ExpenseReportStatus.DRAFT,
       createdAt: '2026-01-14T14:00:00.000Z',
       updatedAt: '2026-01-14T14:00:00.000Z',
     };
@@ -83,11 +86,25 @@ describe('NewReportPage', () => {
     fireEvent.change(dateInput, { target: { value: '2026-01-15' } });
     fireEvent.click(createButton);
 
+    // Verify API was called
     await waitFor(() => {
       expect(expenseReportsApi.createExpenseReport).toHaveBeenCalledWith({
         title: 'Test Report',
         reportDate: '2026-01-15',
       });
+    });
+
+    // Verify success modal is shown
+    await waitFor(() => {
+      expect(screen.getByText('Submitted Successfully')).toBeInTheDocument();
+    });
+
+    // Click the Done button in the modal
+    const doneButton = screen.getByText('Done');
+    fireEvent.click(doneButton);
+
+    // Verify navigation happens after clicking Done
+    await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/');
     });
   });

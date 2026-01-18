@@ -12,7 +12,7 @@ import {
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 // TODO: Replace with actual user ID from authentication
-const MOCK_USER_ID = '31196f2f-06e6-4e8f-b953-a8122bb4135e';
+const MOCK_USER_ID = '6de5bed6-d35b-4f8a-9235-0dfd2a1ed99b'; // Jean Dupont - Employee
 
 export interface CreateExpenseReportPayload {
   title: string;
@@ -116,7 +116,7 @@ export async function createExpenseReport(
     body: JSON.stringify({
       userId: MOCK_USER_ID,
       title: payload.title,
-      reportDate: payload.reportDate,
+      reportDate: new Date(payload.reportDate).toISOString(),
     }),
   });
 
