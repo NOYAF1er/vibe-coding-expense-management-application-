@@ -32,15 +32,27 @@ class ExpensesService {
   }
 
   /**
-   * Create a new expense
+   * Create a new expense with optional file attachment
    */
-  async create(data: Partial<Expense>): Promise<Expense> {
+  async create(data: Partial<Expense>, file?: File): Promise<Expense> {
+    const formData = new FormData();
+    
+    // Add expense data
+    if (data.reportId) formData.append('reportId', data.reportId);
+    if (data.category) formData.append('category', data.category);
+    if (data.amount !== undefined) formData.append('amount', data.amount.toString());
+    if (data.name) formData.append('name', data.name);
+    if (data.description) formData.append('description', data.description);
+    if (data.expenseDate) formData.append('expenseDate', data.expenseDate);
+    
+    // Add file if provided
+    if (file) {
+      formData.append('file', file);
+    }
+    
     const response = await fetch(this.baseUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
+      body: formData, // No Content-Type header, browser sets it with boundary
     });
     if (!response.ok) {
       throw new Error('Failed to create expense');
@@ -49,20 +61,43 @@ class ExpensesService {
   }
 
   /**
-   * Update an expense
+   * Update an expense with optional new file attachment
    */
-  async update(id: string, data: Partial<Expense>): Promise<Expense> {
+  async update(id: string, data: Partial<Expense>, file?: File): Promise<Expense> {
+    const formData = new FormData();
+    
+    // Add expense data
+    if (data.reportId) formData.append('reportId', data.reportId);
+    if (data.category) formData.append('category', data.category);
+    if (data.amount !== undefined) formData.append('amount', data.amount.toString());
+    if (data.name) formData.append('name', data.name);
+    if (data.description) formData.append('description', data.description);
+    if (data.expenseDate) formData.append('expenseDate', data.expenseDate);
+    
+    // Add file if provided
+    if (file) {
+      formData.append('file', file);
+    }
+    
     const response = await fetch(`${this.baseUrl}/${id}`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
+      body: formData, // No Content-Type header, browser sets it with boundary
     });
     if (!response.ok) {
       throw new Error('Failed to update expense');
     }
     return response.json();
+  }
+
+  /**
+   * Download attachment file
+   */
+  async downloadAttachment(attachmentId: string): Promise<Blob> {
+    const response = await fetch(`${this.baseUrl}/attachments/${attachmentId}/download`);
+    if (!response.ok) {
+      throw new Error('Failed to download attachment');
+    }
+    return response.blob();
   }
 
   /**

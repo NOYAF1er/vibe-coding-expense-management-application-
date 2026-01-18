@@ -4,9 +4,10 @@ import { Repository } from 'typeorm';
 import { Expense } from './entities/expense.entity';
 import { CreateExpenseDto, UpdateExpenseDto } from './dto/expense.dto';
 import { ExpenseReportsService } from '../expense-reports/expense-reports.service';
+import { AttachmentsService } from './attachments.service';
 
 /**
- * Service for managing expenses
+ * Service for managing expenses with attachment support
  */
 @Injectable()
 export class ExpensesService {
@@ -15,6 +16,7 @@ export class ExpensesService {
     private readonly expenseRepository: Repository<Expense>,
     @Inject(forwardRef(() => ExpenseReportsService))
     private readonly expenseReportsService: ExpenseReportsService,
+    private readonly attachmentsService: AttachmentsService,
   ) {}
 
   async create(createDto: CreateExpenseDto): Promise<Expense> {
@@ -29,14 +31,37 @@ export class ExpensesService {
     return savedExpense;
   }
 
+  /**
+   * Create expense with optional file attachment
+   * Returns expense with attachment metadata (no BLOB)
+   */
+  async createWithAttachment(
+    createDto: CreateExpenseDto,
+    file?: Express.Multer.File,
+  ): Promise<Expense> {
+    // Create expense first
+    const expense = await this.create(createDto);
+
+    // If file provided, upload it
+    if (file) {
+      await this.attachmentsService.uploadAttachment(expense.id, file);
+    }
+
+    // Return expense with attachments metadata (no BLOB)
+    return this.findOne(expense.id);
+  }
+
   async findAll(): Promise<Expense[]> {
-    return this.expenseRepository.find({ relations: ['report'] });
+    // NO attachments metadata in list view for performance
+    return this.expenseRepository.find({
+      relations: ['report']
+    });
   }
 
   async findOne(id: string): Promise<Expense> {
     const expense = await this.expenseRepository.findOne({
       where: { id },
-      relations: ['report'],
+      relations: ['report', 'attachments'], // Load attachments metadata (no BLOB) ONLY here
     });
     if (!expense) {
       throw new NotFoundException(`Expense with ID ${id} not found`);
@@ -45,7 +70,10 @@ export class ExpensesService {
   }
 
   async findByReport(reportId: string): Promise<Expense[]> {
-    return this.expenseRepository.find({ where: { reportId } });
+    // NO attachments metadata in list view for performance
+    return this.expenseRepository.find({
+      where: { reportId }
+    });
   }
 
   async update(id: string, updateDto: UpdateExpenseDto): Promise<Expense> {
@@ -60,6 +88,27 @@ export class ExpensesService {
     }
     
     return updatedExpense;
+  }
+
+  /**
+   * Update expense with optional new file attachment
+   * Returns expense with attachment metadata (no BLOB)
+   */
+  async updateWithAttachment(
+    id: string,
+    updateDto: UpdateExpenseDto,
+    file?: Express.Multer.File,
+  ): Promise<Expense> {
+    // Update expense first
+    const expense = await this.update(id, updateDto);
+
+    // If file provided, upload it
+    if (file) {
+      await this.attachmentsService.uploadAttachment(expense.id, file);
+    }
+
+    // Return expense with attachments metadata (no BLOB)
+    return this.findOne(expense.id);
   }
 
   async remove(id: string): Promise<void> {

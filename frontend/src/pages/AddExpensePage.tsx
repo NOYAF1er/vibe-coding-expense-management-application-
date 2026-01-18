@@ -94,19 +94,20 @@ export function AddExpensePage() {
     setIsSubmitting(true);
     try {
       let responseExpenseId: string;
+      const file = files.length > 0 ? files[0] : undefined;
       
       if (expenseId) {
-        // Update existing expense
+        // Update existing expense with optional file
         await expensesService.update(expenseId, {
           category,
           amount: parseFloat(amount),
           name: expenseName || `${categoryOptions.find(c => c.value === category)?.label} Expense`,
           description: description || undefined,
           expenseDate,
-        });
+        }, file);
         responseExpenseId = expenseId;
       } else {
-        // Create new expense
+        // Create new expense with optional file
         const newExpense = await expensesService.create({
           reportId,
           category,
@@ -114,7 +115,7 @@ export function AddExpensePage() {
           name: expenseName || `${categoryOptions.find(c => c.value === category)?.label} Expense`,
           description: description || undefined,
           expenseDate,
-        });
+        }, file);
         responseExpenseId = newExpense.id;
       }
       

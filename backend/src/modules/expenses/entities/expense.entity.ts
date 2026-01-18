@@ -2,6 +2,7 @@ import {
   Entity,
   Column,
   ManyToOne,
+  OneToMany,
   JoinColumn,
   Index,
 } from 'typeorm';
@@ -9,6 +10,7 @@ import { BaseEntity } from '../../../common/entities/base.entity';
 import { ExpenseCategory } from '../../../common/enums/expense-category.enum';
 import { ExpenseStatus } from '../../../common/enums/expense-status.enum';
 import { ExpenseReport } from '../../expense-reports/entities/expense-report.entity';
+import { Attachment } from './attachment.entity';
 
 /**
  * Expense entity representing an individual expense item
@@ -55,7 +57,10 @@ export class Expense extends BaseEntity {
   @Column({ default: true })
   receiptRequired!: boolean;
 
-  // Relation will be added after Attachment entity is created
-  // @OneToMany(() => Attachment, (attachment) => attachment.expense, { cascade: true })
-  // attachments!: Attachment[];
+  /**
+   * Attachments relation - BLOB data is never loaded by default
+   * Only metadata is loaded unless explicitly requested via downloadAttachment
+   */
+  @OneToMany(() => Attachment, (attachment) => attachment.expense, { cascade: true })
+  attachments!: Attachment[];
 }
