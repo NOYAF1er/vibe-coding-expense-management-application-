@@ -1,0 +1,36 @@
+services:
+  # Backend API Service
+  - type: web
+    name: notes-de-frais-api
+    runtime: node
+    region: frankfurt # or oregon, singapore, etc.
+    plan: free # or starter, standard, pro
+    branch: master # or your default branch
+    buildCommand: npm install && npm run build -w shared && npm run build -w backend
+    startCommand: npm run start:prod -w backend
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000 # Render default, will be overridden
+      - key: DATABASE_PATH
+        value: /opt/render/project/src/backend/database.sqlite
+      - key: FRONTEND_URL
+        sync: false # Set manually in Render dashboard after frontend deployment
+    healthCheckPath: /api/v1/hello
+    
+  # Frontend Static Site
+  - type: web
+    name: notes-de-frais-frontend
+    runtime: static
+    region: frankfurt # Should match backend region
+    branch: master # or your default branch
+    buildCommand: npm install && npm run build -w shared && npm run build -w frontend
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false # Set manually in Render dashboard after backend deployment
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html # SPA fallback for client-side routing
