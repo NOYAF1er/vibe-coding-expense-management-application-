@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { ExpensesService } from './expenses.service';
 import { AttachmentsService } from './attachments.service';
@@ -10,9 +9,6 @@ import { ExpenseCategory } from '../../common/enums/expense-category.enum';
 
 describe('ExpensesService', () => {
   let service: ExpensesService;
-  let repository: Repository<Expense>;
-  let attachmentsService: AttachmentsService;
-  let expenseReportsService: ExpenseReportsService;
 
   const mockRepository = {
     create: jest.fn(),
@@ -50,9 +46,6 @@ describe('ExpensesService', () => {
     }).compile();
 
     service = module.get<ExpensesService>(ExpensesService);
-    repository = module.get<Repository<Expense>>(getRepositoryToken(Expense));
-    attachmentsService = module.get<AttachmentsService>(AttachmentsService);
-    expenseReportsService = module.get<ExpenseReportsService>(ExpenseReportsService);
   });
 
   afterEach(() => {
@@ -336,7 +329,7 @@ describe('ExpensesService', () => {
         fileName: 'new-receipt.pdf',
       });
 
-      const result = await service.updateWithAttachment('expense-1', updateDto, mockFile);
+      await service.updateWithAttachment('expense-1', updateDto, mockFile);
 
       expect(mockAttachmentsService.uploadAttachment).toHaveBeenCalledWith('expense-1', mockFile);
     });

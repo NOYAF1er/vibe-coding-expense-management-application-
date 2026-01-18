@@ -6,7 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Attachment } from './entities/attachment.entity';
-import { MAX_FILE_SIZE, ALLOWED_MIME_TYPES } from '../../common/constants/file-upload.constants';
+import { MAX_FILE_SIZE, ALLOWED_MIME_TYPES, AllowedMimeType } from '../../common/constants/file-upload.constants';
 
 /**
  * Service for managing file attachments with BLOB storage
@@ -30,7 +30,7 @@ export class AttachmentsService {
     }
 
     // Check MIME type
-    if (!ALLOWED_MIME_TYPES.includes(file.mimetype as any)) {
+    if (!ALLOWED_MIME_TYPES.includes(file.mimetype as AllowedMimeType)) {
       throw new BadRequestException(
         `File type ${file.mimetype} is not allowed. Allowed types: ${ALLOWED_MIME_TYPES.join(', ')}`
       );
@@ -62,6 +62,7 @@ export class AttachmentsService {
     const saved = await this.attachmentRepository.save(attachment);
 
     // Return without BLOB data (lazy loading)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { fileData, ...metadata } = saved;
     return metadata;
   }
@@ -79,6 +80,7 @@ export class AttachmentsService {
     }
 
     // Return without BLOB
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { fileData, ...metadata } = attachment;
     return metadata;
   }
@@ -92,6 +94,7 @@ export class AttachmentsService {
     });
 
     // Return without BLOBs
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return attachments.map(({ fileData, ...metadata }) => metadata);
   }
 

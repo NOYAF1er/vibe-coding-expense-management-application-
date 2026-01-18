@@ -1,13 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { AttachmentsService } from './attachments.service';
 import { Attachment } from './entities/attachment.entity';
 
 describe('AttachmentsService', () => {
   let service: AttachmentsService;
-  let repository: Repository<Attachment>;
 
   const mockRepository = {
     create: jest.fn(),
@@ -30,7 +28,6 @@ describe('AttachmentsService', () => {
     }).compile();
 
     service = module.get<AttachmentsService>(AttachmentsService);
-    repository = module.get<Repository<Attachment>>(getRepositoryToken(Attachment));
   });
 
   afterEach(() => {

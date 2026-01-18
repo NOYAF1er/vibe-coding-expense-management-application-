@@ -10,6 +10,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ExpenseCategory } from '../../../common/enums/expense-category.enum';
 import { ExpenseStatus } from '../../../common/enums/expense-status.enum';
 
@@ -34,6 +35,7 @@ export class CreateExpenseDto {
   description?: string;
 
   @ApiProperty({ example: 850.50, minimum: 0 })
+  @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   @IsNotEmpty()
