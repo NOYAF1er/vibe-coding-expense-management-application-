@@ -23,7 +23,6 @@ services:
   - type: web
     name: notes-de-frais-frontend
     runtime: static
-    region: frankfurt # Should match backend region
     branch: master # or your default branch
     buildCommand: npm install && npm run build -w shared && npm run build -w frontend
     staticPublishPath: ./frontend/dist
