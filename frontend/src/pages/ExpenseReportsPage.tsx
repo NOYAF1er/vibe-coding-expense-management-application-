@@ -133,7 +133,7 @@ export const ExpenseReportsPage: React.FC = () => {
   }, [debouncedSearch, selectedStatus, sortBy, sortOrder]);
 
   // Fetch expense reports from backend
-  const { reports, loading, error, meta } = useExpenseReports(queryParams);
+  const { reports, loading, error } = useExpenseReports(queryParams);
 
   // Transform backend data to list items
   const listItems = useMemo<ExpenseReportListItem[]>(() => {

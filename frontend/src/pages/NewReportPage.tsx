@@ -4,6 +4,7 @@ import { NewReportHeader } from '../components/NewReportHeader';
 import { TextInput } from '../components/TextInput';
 import { DateInput } from '../components/DateInput';
 import { PrimaryButton } from '../components/PrimaryButton';
+import { SuccessModal } from '../components/SuccessModal';
 import { createExpenseReport } from '../services/expenseReports.api';
 
 /**
@@ -15,6 +16,7 @@ export function NewReportPage() {
   const [purpose, setPurpose] = useState('');
   const [date, setDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleClose = () => {
     navigate('/');
@@ -35,11 +37,16 @@ export function NewReportPage() {
         title: purpose,
         reportDate: date,
       });
-      navigate('/');
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Failed to create expense report:', error);
       setIsSubmitting(false);
     }
+  };
+
+  const handleModalClose = () => {
+    setShowSuccessModal(false);
+    navigate('/');
   };
 
   const isFormValid = purpose.trim() !== '' && date !== '';
@@ -82,6 +89,7 @@ export function NewReportPage() {
           </PrimaryButton>
         </div>
       </footer>
+      <SuccessModal isOpen={showSuccessModal} onClose={handleModalClose} />
     </div>
   );
 }

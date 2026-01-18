@@ -6,7 +6,6 @@ import {
   ExpenseReportDetails,
   Expense,
   ExpenseCategory,
-  ExpenseStatus,
 } from '../types/expense-report.types';
 import { StatusBadge } from '../components/StatusBadge';
 
