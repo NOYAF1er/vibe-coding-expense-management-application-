@@ -156,6 +156,35 @@ export function ExpenseDetailsPage() {
     navigate(`/reports/${reportId}/edit-expense/${expenseId}`);
   };
 
+  const handleDownloadPDF = async () => {
+    if (!expense?.attachments || expense.attachments.length === 0) {
+      alert('No attachment available for this expense');
+      return;
+    }
+
+    try {
+      const attachment = expense.attachments[0]; // Get first attachment
+      const blob = await expensesService.downloadAttachment(attachment.id);
+      
+      // Create a temporary URL for the blob
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create a temporary anchor element to trigger download
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = attachment.fileName;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Error downloading attachment:', err);
+      alert('Failed to download attachment');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark font-display text-content-light dark:text-content-dark">
@@ -289,7 +318,11 @@ export function ExpenseDetailsPage() {
           >
             Edit
           </button>
-          <button className="w-full h-12 flex items-center justify-center rounded-lg bg-primary text-white font-bold">
+          <button
+            onClick={handleDownloadPDF}
+            disabled={!expense.attachments || expense.attachments.length === 0}
+            className="w-full h-12 flex items-center justify-center rounded-lg bg-primary text-white font-bold disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
             Download PDF
           </button>
         </div>

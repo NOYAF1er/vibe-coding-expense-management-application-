@@ -48,6 +48,15 @@ export enum ExpenseStatus {
   REJECTED = 'REJECTED',
 }
 
+export interface Attachment {
+  id: string;
+  expenseId: string;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  uploadedAt: string;
+}
+
 export interface Expense {
   id: string;
   reportId: string;
@@ -60,6 +69,7 @@ export interface Expense {
   createdAt: string;
   updatedAt: string;
   status?: ExpenseStatus;
+  attachments?: Attachment[];
 }
 
 /**
